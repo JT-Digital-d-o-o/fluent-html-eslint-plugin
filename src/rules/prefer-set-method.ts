@@ -59,6 +59,25 @@ const ATTRIBUTE_TO_METHOD: Record<string, string> = {
   rowspan: "setRowspan",
   scope: "setScope",
   span: "setSpan",
+  // Boolean attributes with dedicated setters
+  disabled: "setDisabled",
+  readonly: "setReadonly",
+  checked: "setChecked",
+  autofocus: "setAutofocus",
+  multiple: "setMultiple",
+  novalidate: "setNovalidate",
+  selected: "setSelected",
+  open: "setOpen",
+  // Button attributes
+  formaction: "setFormaction",
+  formmethod: "setFormmethod",
+  // Link attributes
+  referrerpolicy: "setReferrerpolicy",
+  // Area attributes
+  shape: "setShape",
+  coords: "setCoords",
+  // Option/Optgroup
+  label: "setLabel",
 };
 
 const rule: Rule.RuleModule = {

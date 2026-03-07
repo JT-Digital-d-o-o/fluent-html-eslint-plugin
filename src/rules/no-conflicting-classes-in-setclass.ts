@@ -126,7 +126,7 @@ const PREFIX_CONFLICTS: string[] = [
   "ring-",
   "blur-", "brightness-", "contrast-", "grayscale-", "hue-rotate-", "invert-", "saturate-", "sepia-",
   "backdrop-blur-", "backdrop-brightness-", "backdrop-contrast-", "backdrop-grayscale-", "backdrop-hue-rotate-", "backdrop-invert-", "backdrop-opacity-", "backdrop-saturate-", "backdrop-sepia-",
-  "transition-", "duration-", "ease-", "delay-",
+  "transition-", "duration-", "ease-", "delay-", "animate-",
   "scale-", "rotate-", "translate-x-", "translate-y-", "skew-x-", "skew-y-",
   "origin-",
   "accent-",
@@ -136,6 +136,7 @@ const PREFIX_CONFLICTS: string[] = [
   "columns-",
   "aspect-",
   "inset-", "inset-x-", "inset-y-", "top-", "right-", "bottom-", "left-", "start-", "end-",
+  "outline-",
 ];
 
 function getConflictGroup(className: string): string | null {

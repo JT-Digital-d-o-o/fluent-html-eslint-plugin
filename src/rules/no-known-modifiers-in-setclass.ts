@@ -343,6 +343,30 @@ const FIXABLE_PATTERNS: FixablePattern[] = [
 
   // Outline
   { pattern: "outline-", methodName: "outline" },
+
+  // Text style shortcuts
+  { pattern: "italic", methodName: "italic", exactMatch: true },
+  { pattern: "uppercase", methodName: "uppercase", exactMatch: true },
+  { pattern: "lowercase", methodName: "lowercase", exactMatch: true },
+  { pattern: "capitalize", methodName: "capitalize", exactMatch: true },
+  { pattern: "underline", methodName: "underline", exactMatch: true },
+  { pattern: "line-through", methodName: "lineThrough", exactMatch: true },
+  { pattern: "truncate", methodName: "truncate", exactMatch: true },
+  { pattern: "font-bold", methodName: "bold", exactMatch: true },
+
+  // Line height
+  { pattern: "leading-", methodName: "leading" },
+
+  // Letter spacing
+  { pattern: "tracking-", methodName: "tracking" },
+
+  // Border directional (exact matches)
+  { pattern: "border-t", methodName: "border", exactMatch: true, fixedValue: "t" },
+  { pattern: "border-b", methodName: "border", exactMatch: true, fixedValue: "b" },
+  { pattern: "border-l", methodName: "border", exactMatch: true, fixedValue: "l" },
+  { pattern: "border-r", methodName: "border", exactMatch: true, fixedValue: "r" },
+  { pattern: "border-x", methodName: "border", exactMatch: true, fixedValue: "x" },
+  { pattern: "border-y", methodName: "border", exactMatch: true, fixedValue: "y" },
 ];
 
 // Map for display purposes (used in error messages)

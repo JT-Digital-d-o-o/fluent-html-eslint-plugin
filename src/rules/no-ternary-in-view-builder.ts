@@ -5,7 +5,7 @@ const ELEMENT_FUNCTIONS = new Set([
   "Div", "Main", "Header", "Footer", "Section", "Article", "Nav", "Aside",
   "Figure", "Figcaption", "Address", "Hgroup", "Search",
   // Text
-  "P", "H1", "H2", "H3", "H4", "H5", "H6", "Span", "Blockquote", "Pre", "Code",
+  "P", "H1", "H2", "H3", "H4", "H5", "H6", "Span", "Blockquote", "Pre", "Code", "Hr", "Br", "Wbr",
   // Inline
   "Strong", "Em", "B", "I", "U", "S", "Mark", "Small", "Sub", "Sup",
   "Abbr", "Cite", "Q", "Dfn", "Kbd", "Samp", "Var", "Bdi", "Bdo", "Ruby", "Rt", "Rp",
@@ -23,9 +23,9 @@ const ELEMENT_FUNCTIONS = new Set([
   // SVG
   "Path", "Circle", "Rect", "Line", "Polygon", "Polyline", "Ellipse", "G", "Defs", "Use", "Text", "Tspan",
   // Embedded
-  "Iframe", "Embed",
+  "Iframe", "ObjectEl", "Embed",
   // Links
-  "A", "Area",
+  "A", "MapEl", "Area",
   // Document
   "HTML", "Head", "Body", "Title", "Noscript", "Template",
   // Data

@@ -2,18 +2,32 @@ import { Rule } from "eslint";
 
 // List of fluent modifier methods that add classes (would be overwritten by setClass/setClasses)
 const FLUENT_MODIFIERS = new Set([
-  // Padding
+  // Spacing
   "padding",
-  // Margin
   "margin",
+  "gap",
+  "spaceX",
+  "spaceY",
   // Colors
   "background",
   "textColor",
   "borderColor",
+  "ringColor",
   // Typography
   "textSize",
   "textAlign",
   "fontWeight",
+  "bold",
+  "italic",
+  "uppercase",
+  "lowercase",
+  "capitalize",
+  "underline",
+  "lineThrough",
+  "truncate",
+  "leading",
+  "tracking",
+  "whitespace",
   // Sizing
   "w",
   "h",
@@ -21,26 +35,58 @@ const FLUENT_MODIFIERS = new Set([
   "minW",
   "maxH",
   "minH",
+  "aspect",
   // Flexbox
   "flex",
   "flexDirection",
+  "flexWrap",
   "justifyContent",
   "alignItems",
-  "gap",
+  "alignSelf",
+  "shrink",
+  "grow",
   // Grid
   "grid",
   "gridCols",
   "gridRows",
+  "colSpan",
   // Borders & Effects
   "border",
   "rounded",
   "shadow",
-  // Position & Layout
+  "ring",
+  "outline",
+  "divideX",
+  "divideY",
+  // Layout & Display
+  "display",
+  "hidden",
   "position",
+  "inset",
+  "top",
+  "right",
+  "bottom",
+  "left",
   "zIndex",
+  "overflow",
+  "objectFit",
+  // Effects
   "opacity",
   "cursor",
-  "overflow",
+  "pointerEvents",
+  "select",
+  // Transforms & Animation
+  "transition",
+  "duration",
+  "animate",
+  "scale",
+  "rotate",
+  "translate",
+  // Accessibility
+  "srOnly",
+  // Variant proxy
+  "on",
+  "at",
   // Other common modifiers
   "addClass",
   // Callback-based modifiers (may add classes internally)
