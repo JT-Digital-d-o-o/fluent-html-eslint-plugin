@@ -432,6 +432,41 @@ function checkClassForKnownModifiers(className: string): Array<{ className: stri
   return violations;
 }
 
+// Variant prefixes that map to .on() (pseudo-classes/states)
+const STATE_VARIANTS = new Set([
+  "hover", "focus", "active", "disabled", "visited",
+  "first", "last", "odd", "even",
+  "focus-within", "focus-visible",
+  "group-hover", "peer-hover", "peer-focus",
+  "checked", "required", "invalid", "placeholder",
+  "empty", "enabled", "read-only", "dark",
+]);
+
+// Variant prefixes that map to .at() (breakpoints)
+const BREAKPOINT_VARIANTS = new Set([
+  "sm", "md", "lg", "xl", "2xl",
+]);
+
+function parseVariantPrefix(className: string): { variant: string; variantMethod: "on" | "at"; baseClass: string } | null {
+  const colonIndex = className.indexOf(":");
+  if (colonIndex === -1) return null;
+
+  const prefix = className.slice(0, colonIndex);
+  const baseClass = className.slice(colonIndex + 1);
+
+  // Skip multi-level variants (sm:hover:bg-blue-500) for now
+  if (baseClass.includes(":")) return null;
+
+  if (STATE_VARIANTS.has(prefix)) {
+    return { variant: prefix, variantMethod: "on", baseClass };
+  }
+  if (BREAKPOINT_VARIANTS.has(prefix)) {
+    return { variant: prefix, variantMethod: "at", baseClass };
+  }
+
+  return null;
+}
+
 const rule: Rule.RuleModule = {
   meta: {
     type: "suggestion",
@@ -443,29 +478,53 @@ const rule: Rule.RuleModule = {
     fixable: "code",
     messages: {
       useKnownModifier: "Avoid using .{{callee}}() with '{{className}}'. Use .{{method}} instead to prevent style overrides.",
+      useVariantMethod: "Avoid using .{{callee}}() with '{{className}}'. Use .{{variantMethod}}(\"{{variant}}\", t => t.{{method}}) instead.",
     },
     schema: [],
   },
 
   create(context: Rule.RuleContext): Rule.RuleListener {
-    function checkStringArg(node: any, calleeName: string, isAddClass: boolean) {
+    function reportClassViolation(node: any, calleeName: string, className: string) {
+      // Check for variant prefix (hover:, sm:, etc.)
+      if (className.includes(":")) {
+        const parsed = parseVariantPrefix(className);
+        if (!parsed) return;
+        const violations = checkClassForKnownModifiers(parsed.baseClass);
+        for (const violation of violations) {
+          context.report({
+            node: node as any,
+            messageId: "useVariantMethod",
+            data: {
+              callee: calleeName,
+              className,
+              variantMethod: parsed.variantMethod,
+              variant: parsed.variant,
+              method: violation.method,
+            },
+          });
+        }
+        return;
+      }
+
+      const violations = checkClassForKnownModifiers(className);
+      for (const violation of violations) {
+        context.report({
+          node: node as any,
+          messageId: "useKnownModifier",
+          data: {
+            callee: calleeName,
+            className: violation.className,
+            method: violation.method,
+          },
+        });
+      }
+    }
+
+    function checkStringArg(node: any, calleeName: string) {
       if (node.type === "Literal" && typeof node.value === "string") {
         const classNames = node.value.split(/\s+/).filter(Boolean);
-
         for (const className of classNames) {
-          if (isAddClass && className.includes(":")) continue;
-          const violations = checkClassForKnownModifiers(className);
-          for (const violation of violations) {
-            context.report({
-              node: node as any,
-              messageId: "useKnownModifier",
-              data: {
-                callee: calleeName,
-                className: violation.className,
-                method: violation.method,
-              },
-            });
-          }
+          reportClassViolation(node, calleeName, className);
         }
       }
 
@@ -474,19 +533,7 @@ const rule: Rule.RuleModule = {
           if (quasi.value.cooked) {
             const classNames = quasi.value.cooked.split(/\s+/).filter(Boolean);
             for (const className of classNames) {
-              if (isAddClass && className.includes(":")) continue;
-              const violations = checkClassForKnownModifiers(className);
-              for (const violation of violations) {
-                context.report({
-                  node: node as any,
-                  messageId: "useKnownModifier",
-                  data: {
-                    callee: calleeName,
-                    className: violation.className,
-                    method: violation.method,
-                  },
-                });
-              }
+              reportClassViolation(node, calleeName, className);
             }
           }
         }
@@ -511,7 +558,6 @@ const rule: Rule.RuleModule = {
         }
 
         const calleeName: string = node.callee.property.name;
-        const isAddClass = calleeName === "addClass";
 
         // Check if there's an argument
         if (node.arguments.length === 0) {
@@ -524,7 +570,7 @@ const rule: Rule.RuleModule = {
         if (calleeName === "setClasses") {
           if (arg.type !== "ArrayExpression") return;
           for (const element of arg.elements) {
-            if (element) checkStringArg(element, calleeName, false);
+            if (element) checkStringArg(element, calleeName);
           }
           return;
         }
@@ -536,8 +582,8 @@ const rule: Rule.RuleModule = {
           const remainingClasses: string[] = [];
 
           for (const className of classNames) {
-            // For addClass, skip classes with modifier prefixes (hover:, focus:, md:, etc.)
-            if (isAddClass && className.includes(":")) {
+            // Variant classes (hover:, sm:, etc.) can't be auto-fixed — keep as remaining
+            if (className.includes(":")) {
               remainingClasses.push(className);
               continue;
             }
@@ -551,10 +597,27 @@ const rule: Rule.RuleModule = {
 
           // Report violations
           for (const className of classNames) {
-            // For addClass, skip classes with modifier prefixes
-            if (isAddClass && className.includes(":")) {
+            // Variant classes — report with variant-aware message (no autofix)
+            if (className.includes(":")) {
+              const parsed = parseVariantPrefix(className);
+              if (!parsed) continue;
+              const violations = checkClassForKnownModifiers(parsed.baseClass);
+              for (const violation of violations) {
+                context.report({
+                  node: arg as any,
+                  messageId: "useVariantMethod",
+                  data: {
+                    callee: calleeName,
+                    className,
+                    variantMethod: parsed.variantMethod,
+                    variant: parsed.variant,
+                    method: violation.method,
+                  },
+                });
+              }
               continue;
             }
+
             const violations = checkClassForKnownModifiers(className);
             for (const violation of violations) {
               const match = matchClass(className);
@@ -604,23 +667,7 @@ const rule: Rule.RuleModule = {
               const classNames = quasi.value.cooked.split(/\s+/).filter(Boolean);
 
               for (const className of classNames) {
-                // For addClass, skip classes with modifier prefixes
-                if (isAddClass && className.includes(":")) {
-                  continue;
-                }
-                const violations = checkClassForKnownModifiers(className);
-
-                for (const violation of violations) {
-                  context.report({
-                    node: arg as any,
-                    messageId: "useKnownModifier",
-                    data: {
-                      callee: calleeName,
-                      className: violation.className,
-                      method: violation.method,
-                    },
-                  });
-                }
+                reportClassViolation(arg, calleeName, className);
               }
             }
           }
