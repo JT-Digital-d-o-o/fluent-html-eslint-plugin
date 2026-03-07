@@ -67,29 +67,8 @@ const FIXABLE_PATTERNS: FixablePattern[] = [
   { pattern: "text-8xl", methodName: "textSize", exactMatch: true, fixedValue: "8xl" },
   { pattern: "text-9xl", methodName: "textSize", exactMatch: true, fixedValue: "9xl" },
 
-  // Text colors (prefix patterns for color classes like text-red-500)
-  { pattern: "text-slate-", methodName: "textColor" },
-  { pattern: "text-gray-", methodName: "textColor" },
-  { pattern: "text-zinc-", methodName: "textColor" },
-  { pattern: "text-neutral-", methodName: "textColor" },
-  { pattern: "text-stone-", methodName: "textColor" },
-  { pattern: "text-red-", methodName: "textColor" },
-  { pattern: "text-orange-", methodName: "textColor" },
-  { pattern: "text-amber-", methodName: "textColor" },
-  { pattern: "text-yellow-", methodName: "textColor" },
-  { pattern: "text-lime-", methodName: "textColor" },
-  { pattern: "text-green-", methodName: "textColor" },
-  { pattern: "text-emerald-", methodName: "textColor" },
-  { pattern: "text-teal-", methodName: "textColor" },
-  { pattern: "text-cyan-", methodName: "textColor" },
-  { pattern: "text-sky-", methodName: "textColor" },
-  { pattern: "text-blue-", methodName: "textColor" },
-  { pattern: "text-indigo-", methodName: "textColor" },
-  { pattern: "text-violet-", methodName: "textColor" },
-  { pattern: "text-purple-", methodName: "textColor" },
-  { pattern: "text-fuchsia-", methodName: "textColor" },
-  { pattern: "text-pink-", methodName: "textColor" },
-  { pattern: "text-rose-", methodName: "textColor" },
+  // Text colors (catch-all — exact matches above handle alignment/size)
+  { pattern: "text-", methodName: "textColor" },
 
   // Border colors
   { pattern: "border-slate-", methodName: "borderColor" },
@@ -479,6 +458,7 @@ const rule: Rule.RuleModule = {
     messages: {
       useKnownModifier: "Avoid using .{{callee}}() with '{{className}}'. Use .{{method}} instead to prevent style overrides.",
       useVariantMethod: "Avoid using .{{callee}}() with '{{className}}'. Use .{{variantMethod}}(\"{{variant}}\", t => t.{{method}}) instead.",
+      useVariantMethodGeneric: "Avoid using .{{callee}}() with '{{className}}'. Use .{{variantMethod}}(\"{{variant}}\", t => t.addClass(\"{{baseClass}}\")) instead.",
     },
     schema: [],
   },
@@ -490,16 +470,31 @@ const rule: Rule.RuleModule = {
         const parsed = parseVariantPrefix(className);
         if (!parsed) return;
         const violations = checkClassForKnownModifiers(parsed.baseClass);
-        for (const violation of violations) {
+        if (violations.length > 0) {
+          for (const violation of violations) {
+            context.report({
+              node: node as any,
+              messageId: "useVariantMethod",
+              data: {
+                callee: calleeName,
+                className,
+                variantMethod: parsed.variantMethod,
+                variant: parsed.variant,
+                method: violation.method,
+              },
+            });
+          }
+        } else {
+          // Unknown base class but still has a variant prefix — should use .on()/.at()
           context.report({
             node: node as any,
-            messageId: "useVariantMethod",
+            messageId: "useVariantMethodGeneric",
             data: {
               callee: calleeName,
               className,
               variantMethod: parsed.variantMethod,
               variant: parsed.variant,
-              method: violation.method,
+              baseClass: parsed.baseClass,
             },
           });
         }
@@ -602,16 +597,30 @@ const rule: Rule.RuleModule = {
               const parsed = parseVariantPrefix(className);
               if (!parsed) continue;
               const violations = checkClassForKnownModifiers(parsed.baseClass);
-              for (const violation of violations) {
+              if (violations.length > 0) {
+                for (const violation of violations) {
+                  context.report({
+                    node: arg as any,
+                    messageId: "useVariantMethod",
+                    data: {
+                      callee: calleeName,
+                      className,
+                      variantMethod: parsed.variantMethod,
+                      variant: parsed.variant,
+                      method: violation.method,
+                    },
+                  });
+                }
+              } else {
                 context.report({
                   node: arg as any,
-                  messageId: "useVariantMethod",
+                  messageId: "useVariantMethodGeneric",
                   data: {
                     callee: calleeName,
                     className,
                     variantMethod: parsed.variantMethod,
                     variant: parsed.variant,
-                    method: violation.method,
+                    baseClass: parsed.baseClass,
                   },
                 });
               }

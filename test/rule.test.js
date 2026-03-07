@@ -77,6 +77,11 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
         { messageId: "useVariantMethod", data: { callee: "addClass", className: "hover:bg-blue-600", variantMethod: "on", variant: "hover", method: "background()" } },
       ],
     },
+    // addClass with unknown base class but known variant — still caught
+    {
+      code: `Div().addClass("hover:unknown-modifier")`,
+      errors: [{ messageId: "useVariantMethodGeneric", data: { callee: "addClass", className: "hover:unknown-modifier", variantMethod: "on", variant: "hover", baseClass: "unknown-modifier" } }],
+    },
     // addClass with multiple base utilities
     {
       code: `Div().addClass("mt-2 p-4")`,
