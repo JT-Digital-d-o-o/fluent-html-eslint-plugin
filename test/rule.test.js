@@ -8,6 +8,7 @@ const noConditionalInSetclass = require("../dist/rules/no-conditional-in-setclas
 const noInnerHtmlSwap = require("../dist/rules/no-innerhtml-swap");
 const preferSetMethod = require("../dist/rules/prefer-set-method");
 const noRawIds = require("../dist/rules/no-raw-ids");
+const noTernaryInViewBuilder = require("../dist/rules/no-ternary-in-view-builder");
 
 const tester = new RuleTester({ parserOptions: { ecmaVersion: 2020, sourceType: "module" } });
 
@@ -412,6 +413,55 @@ runSuite("no-raw-ids", noRawIds, {
     {
       code: `Div().setHtmx("/api", { target: "#main-content" })`,
       errors: [{ messageId: "noRawTarget", data: { target: "#main-content", suggestion: "mainContent" } }],
+    },
+  ],
+});
+
+// ------------------------------------
+// no-ternary-in-view-builder
+// ------------------------------------
+
+runSuite("no-ternary-in-view-builder", noTernaryInViewBuilder, {
+  valid: [
+    // No ternary — plain children
+    { code: `Div(H1("Title"), P("Body"))` },
+    // .when() pattern — correct
+    { code: `Div().when(isAdmin, t => t.children(AdminPanel()))` },
+    // Ternary outside a view builder — not our concern
+    { code: `const x = cond ? "a" : "b"` },
+    // Non-element function with ternary — fine
+    { code: `myFunc(cond ? a : b)` },
+    // Logical AND (not ternary) — fine
+    { code: `Div(isAdmin && AdminPanel())` },
+  ],
+  invalid: [
+    // Direct ternary argument
+    {
+      code: `Div(isLoggedIn ? UserPanel() : LoginForm())`,
+      errors: [{ messageId: "noTernaryInViewBuilder", data: { name: "Div" } }],
+    },
+    // Ternary among other children
+    {
+      code: `Div(Header(), isAdmin ? AdminPanel() : null, Footer())`,
+      errors: [{ messageId: "noTernaryInViewBuilder", data: { name: "Div" } }],
+    },
+    // Ternary inside array children
+    {
+      code: `Div([Header(), isAdmin ? AdminPanel() : null])`,
+      errors: [{ messageId: "noTernaryInViewBuilder", data: { name: "Div" } }],
+    },
+    // Works with other element functions
+    {
+      code: `Ul(isExpanded ? FullList() : Summary())`,
+      errors: [{ messageId: "noTernaryInViewBuilder", data: { name: "Ul" } }],
+    },
+    // Multiple ternaries
+    {
+      code: `Div(a ? B() : C(), d ? E() : F())`,
+      errors: [
+        { messageId: "noTernaryInViewBuilder", data: { name: "Div" } },
+        { messageId: "noTernaryInViewBuilder", data: { name: "Div" } },
+      ],
     },
   ],
 });

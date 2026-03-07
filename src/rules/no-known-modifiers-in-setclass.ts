@@ -142,11 +142,28 @@ const FIXABLE_PATTERNS: FixablePattern[] = [
   { pattern: "flex-col-reverse", methodName: "flexDirection", exactMatch: true, fixedValue: "col-reverse" },
   { pattern: "flex-row", methodName: "flexDirection", exactMatch: true, fixedValue: "row" },
   { pattern: "flex-col", methodName: "flexDirection", exactMatch: true, fixedValue: "col" },
+  { pattern: "flex-wrap-reverse", methodName: "flexWrap", exactMatch: true, fixedValue: "wrap-reverse" },
+  { pattern: "flex-wrap", methodName: "flexWrap", exactMatch: true, fixedValue: "wrap" },
+  { pattern: "flex-nowrap", methodName: "flexWrap", exactMatch: true, fixedValue: "nowrap" },
   { pattern: "flex-1", methodName: "flex", exactMatch: true, fixedValue: "1" },
   { pattern: "flex-auto", methodName: "flex", exactMatch: true, fixedValue: "auto" },
   { pattern: "flex-initial", methodName: "flex", exactMatch: true, fixedValue: "initial" },
   { pattern: "flex-none", methodName: "flex", exactMatch: true, fixedValue: "none" },
   { pattern: "flex", methodName: "flex", exactMatch: true },
+
+  // Shrink & Grow
+  { pattern: "shrink-0", methodName: "shrink", exactMatch: true, fixedValue: "0" },
+  { pattern: "shrink", methodName: "shrink", exactMatch: true },
+  { pattern: "grow-0", methodName: "grow", exactMatch: true, fixedValue: "0" },
+  { pattern: "grow", methodName: "grow", exactMatch: true },
+
+  // Align self
+  { pattern: "self-auto", methodName: "alignSelf", exactMatch: true, fixedValue: "auto" },
+  { pattern: "self-start", methodName: "alignSelf", exactMatch: true, fixedValue: "start" },
+  { pattern: "self-end", methodName: "alignSelf", exactMatch: true, fixedValue: "end" },
+  { pattern: "self-center", methodName: "alignSelf", exactMatch: true, fixedValue: "center" },
+  { pattern: "self-stretch", methodName: "alignSelf", exactMatch: true, fixedValue: "stretch" },
+  { pattern: "self-baseline", methodName: "alignSelf", exactMatch: true, fixedValue: "baseline" },
 
   // Justify content
   { pattern: "justify-start", methodName: "justifyContent", exactMatch: true, fixedValue: "start" },
@@ -174,6 +191,24 @@ const FIXABLE_PATTERNS: FixablePattern[] = [
   { pattern: "grid-cols-", methodName: "gridCols" },
   { pattern: "grid-rows-", methodName: "gridRows" },
   { pattern: "grid", methodName: "grid", exactMatch: true },
+
+  // Column span
+  { pattern: "col-span-", methodName: "colSpan" },
+
+  // Aspect ratio
+  { pattern: "aspect-auto", methodName: "aspect", exactMatch: true, fixedValue: "auto" },
+  { pattern: "aspect-square", methodName: "aspect", exactMatch: true, fixedValue: "square" },
+  { pattern: "aspect-video", methodName: "aspect", exactMatch: true, fixedValue: "video" },
+
+  // Space between children
+  { pattern: "space-x-", methodName: "spaceX" },
+  { pattern: "space-y-", methodName: "spaceY" },
+
+  // Divide
+  { pattern: "divide-x-", methodName: "divideX" },
+  { pattern: "divide-y-", methodName: "divideY" },
+  { pattern: "divide-x", methodName: "divideX", exactMatch: true },
+  { pattern: "divide-y", methodName: "divideY", exactMatch: true },
 
   // Border width
   { pattern: "border-2", methodName: "border", exactMatch: true, fixedValue: "2" },
@@ -227,6 +262,87 @@ const FIXABLE_PATTERNS: FixablePattern[] = [
   { pattern: "overflow-scroll", methodName: "overflow", exactMatch: true, fixedValue: "scroll" },
   { pattern: "overflow-visible", methodName: "overflow", exactMatch: true, fixedValue: "visible" },
   { pattern: "overflow-clip", methodName: "overflow", exactMatch: true, fixedValue: "clip" },
+
+  // Object fit
+  { pattern: "object-", methodName: "objectFit" },
+
+  // Display
+  { pattern: "hidden", methodName: "hidden", exactMatch: true },
+  { pattern: "block", methodName: "display", exactMatch: true, fixedValue: "block" },
+  { pattern: "inline-block", methodName: "display", exactMatch: true, fixedValue: "inline-block" },
+  { pattern: "inline-flex", methodName: "display", exactMatch: true, fixedValue: "inline-flex" },
+  { pattern: "inline-grid", methodName: "display", exactMatch: true, fixedValue: "inline-grid" },
+  { pattern: "inline", methodName: "display", exactMatch: true, fixedValue: "inline" },
+  { pattern: "flow-root", methodName: "display", exactMatch: true, fixedValue: "flow-root" },
+  { pattern: "contents", methodName: "display", exactMatch: true, fixedValue: "contents" },
+  { pattern: "list-item", methodName: "display", exactMatch: true, fixedValue: "list-item" },
+
+  // Inset / Position offsets
+  { pattern: "inset-", methodName: "inset" },
+  { pattern: "top-", methodName: "top" },
+  { pattern: "right-", methodName: "right" },
+  { pattern: "bottom-", methodName: "bottom" },
+  { pattern: "left-", methodName: "left" },
+
+  // Transitions & Animation
+  { pattern: "transition-", methodName: "transition" },
+  { pattern: "transition", methodName: "transition", exactMatch: true },
+  { pattern: "duration-", methodName: "duration" },
+  { pattern: "animate-", methodName: "animate" },
+
+  // Ring
+  { pattern: "ring-0", methodName: "ring", exactMatch: true, fixedValue: "0" },
+  { pattern: "ring-1", methodName: "ring", exactMatch: true, fixedValue: "1" },
+  { pattern: "ring-2", methodName: "ring", exactMatch: true, fixedValue: "2" },
+  { pattern: "ring-4", methodName: "ring", exactMatch: true, fixedValue: "4" },
+  { pattern: "ring-8", methodName: "ring", exactMatch: true, fixedValue: "8" },
+  { pattern: "ring", methodName: "ring", exactMatch: true },
+
+  // Ring colors (prefix patterns)
+  { pattern: "ring-slate-", methodName: "ringColor" },
+  { pattern: "ring-gray-", methodName: "ringColor" },
+  { pattern: "ring-zinc-", methodName: "ringColor" },
+  { pattern: "ring-neutral-", methodName: "ringColor" },
+  { pattern: "ring-stone-", methodName: "ringColor" },
+  { pattern: "ring-red-", methodName: "ringColor" },
+  { pattern: "ring-orange-", methodName: "ringColor" },
+  { pattern: "ring-amber-", methodName: "ringColor" },
+  { pattern: "ring-yellow-", methodName: "ringColor" },
+  { pattern: "ring-lime-", methodName: "ringColor" },
+  { pattern: "ring-green-", methodName: "ringColor" },
+  { pattern: "ring-emerald-", methodName: "ringColor" },
+  { pattern: "ring-teal-", methodName: "ringColor" },
+  { pattern: "ring-cyan-", methodName: "ringColor" },
+  { pattern: "ring-sky-", methodName: "ringColor" },
+  { pattern: "ring-blue-", methodName: "ringColor" },
+  { pattern: "ring-indigo-", methodName: "ringColor" },
+  { pattern: "ring-violet-", methodName: "ringColor" },
+  { pattern: "ring-purple-", methodName: "ringColor" },
+  { pattern: "ring-fuchsia-", methodName: "ringColor" },
+  { pattern: "ring-pink-", methodName: "ringColor" },
+  { pattern: "ring-rose-", methodName: "ringColor" },
+  { pattern: "ring-white", methodName: "ringColor", exactMatch: true, fixedValue: "white" },
+  { pattern: "ring-black", methodName: "ringColor", exactMatch: true, fixedValue: "black" },
+  { pattern: "ring-transparent", methodName: "ringColor", exactMatch: true, fixedValue: "transparent" },
+
+  // Transforms
+  { pattern: "scale-", methodName: "scale" },
+  { pattern: "rotate-", methodName: "rotate" },
+  { pattern: "translate-x-", methodName: "translate", direction: "x" },
+  { pattern: "translate-y-", methodName: "translate", direction: "y" },
+
+  // Interactivity
+  { pattern: "select-", methodName: "select" },
+  { pattern: "pointer-events-", methodName: "pointerEvents" },
+
+  // Whitespace
+  { pattern: "whitespace-", methodName: "whitespace" },
+
+  // Accessibility
+  { pattern: "sr-only", methodName: "srOnly", exactMatch: true },
+
+  // Outline
+  { pattern: "outline-", methodName: "outline" },
 ];
 
 // Map for display purposes (used in error messages)

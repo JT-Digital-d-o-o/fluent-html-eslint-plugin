@@ -11,6 +11,7 @@ import noConditionalInSetclass = require("./rules/no-conditional-in-setclass");
 import noInnerHtmlSwap = require("./rules/no-innerhtml-swap");
 import preferSetMethod = require("./rules/prefer-set-method");
 import noRawIds = require("./rules/no-raw-ids");
+import noTernaryInViewBuilder = require("./rules/no-ternary-in-view-builder");
 
 const plugin = {
   rules: {
@@ -27,6 +28,7 @@ const plugin = {
     "no-innerhtml-swap": noInnerHtmlSwap,
     "prefer-set-method": preferSetMethod,
     "no-raw-ids": noRawIds,
+    "no-ternary-in-view-builder": noTernaryInViewBuilder,
   },
   configs: {
     recommended: {
@@ -45,6 +47,7 @@ const plugin = {
         "fluent-html/no-innerhtml-swap": "error",
         "fluent-html/prefer-set-method": "warn",
         "fluent-html/no-raw-ids": "warn",
+        "fluent-html/no-ternary-in-view-builder": "warn",
       },
     },
   },
