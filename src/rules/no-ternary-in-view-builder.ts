@@ -42,6 +42,28 @@ function isElementCall(node: any): boolean {
     ELEMENT_FUNCTIONS.has(node.callee.name);
 }
 
+function isLiteral(node: any): boolean {
+  if (node.type === "Literal") return true;
+  if (node.type === "TemplateLiteral") return true;
+  if (node.type === "NullLiteral") return true;
+  // null is parsed as Literal with value null
+  return false;
+}
+
+function hasViewElement(node: any): boolean {
+  if (isLiteral(node)) return false;
+  if (node.type === "ConditionalExpression") {
+    return hasViewElement(node.consequent) || hasViewElement(node.alternate);
+  }
+  if (isElementCall(node)) return true;
+  // If it's a chain like Div().addClass("x"), walk up the member expression
+  if (node.type === "CallExpression" && node.callee.type === "MemberExpression") {
+    return hasViewElement(node.callee.object);
+  }
+  // Unknown expression (variable, function call, etc.) — don't flag
+  return false;
+}
+
 const rule: Rule.RuleModule = {
   meta: {
     type: "suggestion",
@@ -66,7 +88,7 @@ const rule: Rule.RuleModule = {
         const funcName = node.callee.name;
 
         for (const arg of node.arguments) {
-          if (arg.type === "ConditionalExpression") {
+          if (arg.type === "ConditionalExpression" && hasViewElement(arg)) {
             context.report({
               node: arg,
               messageId: "noTernaryInViewBuilder",
@@ -77,7 +99,7 @@ const rule: Rule.RuleModule = {
           // Also check inside array children: Div([cond ? A() : B()])
           if (arg.type === "ArrayExpression") {
             for (const el of arg.elements) {
-              if (el && el.type === "ConditionalExpression") {
+              if (el && el.type === "ConditionalExpression" && hasViewElement(el)) {
                 context.report({
                   node: el,
                   messageId: "noTernaryInViewBuilder",

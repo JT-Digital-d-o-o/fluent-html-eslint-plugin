@@ -65,7 +65,7 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
       code: `Div().addClass("hover:bg-blue-600 focus:ring-2")`,
       errors: [
         { messageId: "useVariantMethod", data: { callee: "addClass", className: "hover:bg-blue-600", variantMethod: "on", variant: "hover", method: "background()" } },
-        { messageId: "useVariantMethod", data: { callee: "addClass", className: "focus:ring-2", variantMethod: "on", variant: "focus", method: "ring()" } },
+        { messageId: "useVariantMethod", data: { callee: "addClass", className: "focus:ring-2", variantMethod: "on", variant: "focus", method: "ring('2')" } },
       ],
     },
     // addClass with base utility + modifier-prefixed class — keeps modifier class in addClass
@@ -452,14 +452,22 @@ runSuite("no-ternary-in-view-builder", noTernaryInViewBuilder, {
     { code: `myFunc(cond ? a : b)` },
     // Logical AND (not ternary) — fine
     { code: `Div(isAdmin && AdminPanel())` },
+    // Ternary with literal values — fine
+    { code: `Div(isActive ? "Active" : "Inactive")` },
+    // Ternary with template literal — fine
+    { code: `Span(count > 0 ? "yes" : "no")` },
+    // Ternary with null literal — fine (both sides literals)
+    { code: `Div(isReady ? "Ready" : null)` },
+    // Ternary with non-element function call — fine (unknown)
+    { code: `Div(cond ? getText() : "fallback")` },
   ],
   invalid: [
-    // Direct ternary argument
+    // Direct ternary with view elements
     {
       code: `Div(isLoggedIn ? UserPanel() : LoginForm())`,
       errors: [{ messageId: "noTernaryInViewBuilder", data: { name: "Div" } }],
     },
-    // Ternary among other children
+    // Ternary with one side being a view element
     {
       code: `Div(Header(), isAdmin ? AdminPanel() : null, Footer())`,
       errors: [{ messageId: "noTernaryInViewBuilder", data: { name: "Div" } }],
@@ -474,13 +482,18 @@ runSuite("no-ternary-in-view-builder", noTernaryInViewBuilder, {
       code: `Ul(isExpanded ? FullList() : Summary())`,
       errors: [{ messageId: "noTernaryInViewBuilder", data: { name: "Ul" } }],
     },
-    // Multiple ternaries
+    // Multiple ternaries with view elements
     {
       code: `Div(a ? B() : C(), d ? E() : F())`,
       errors: [
         { messageId: "noTernaryInViewBuilder", data: { name: "Div" } },
         { messageId: "noTernaryInViewBuilder", data: { name: "Div" } },
       ],
+    },
+    // Chained view element in ternary
+    {
+      code: `Div(isAdmin ? Span("Admin").bold() : Span("User"))`,
+      errors: [{ messageId: "noTernaryInViewBuilder", data: { name: "Div" } }],
     },
   ],
 });
