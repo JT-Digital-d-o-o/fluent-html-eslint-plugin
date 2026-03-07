@@ -36,14 +36,12 @@ function runSuite(name, rule, tests) {
 
 runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass, {
   valid: [
-    // addClass with pseudo-class prefix — intended use
-    { code: `Div().addClass("hover:bg-blue-600")` },
-    // addClass with responsive prefix — intended use
-    { code: `Div().addClass("md:w-1/2")` },
-    // addClass with multiple modifier-prefixed classes — fine
-    { code: `Div().addClass("hover:bg-blue-600 focus:ring-2")` },
     // addClass with non-utility class — fine
     { code: `Div().addClass("custom-widget")` },
+    // addClass with unrecognized variant prefix — fine
+    { code: `Div().addClass("print:hidden")` },
+    // addClass with multi-level variant — skipped for now
+    { code: `Div().addClass("sm:hover:bg-blue-600")` },
   ],
   invalid: [
     // addClass with single base utility
@@ -52,11 +50,32 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
       output: `Div().margin("t", "2")`,
       errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "mt-2", method: "margin('t', ...)" } }],
     },
+    // addClass with variant prefix — suggest .on()
+    {
+      code: `Div().addClass("hover:bg-blue-600")`,
+      errors: [{ messageId: "useVariantMethod", data: { callee: "addClass", className: "hover:bg-blue-600", variantMethod: "on", variant: "hover", method: "background()" } }],
+    },
+    // addClass with responsive prefix — suggest .at()
+    {
+      code: `Div().addClass("md:w-1/2")`,
+      errors: [{ messageId: "useVariantMethod", data: { callee: "addClass", className: "md:w-1/2", variantMethod: "at", variant: "md", method: "w()" } }],
+    },
+    // addClass with multiple variant-prefixed classes
+    {
+      code: `Div().addClass("hover:bg-blue-600 focus:ring-2")`,
+      errors: [
+        { messageId: "useVariantMethod", data: { callee: "addClass", className: "hover:bg-blue-600", variantMethod: "on", variant: "hover", method: "background()" } },
+        { messageId: "useVariantMethod", data: { callee: "addClass", className: "focus:ring-2", variantMethod: "on", variant: "focus", method: "ring()" } },
+      ],
+    },
     // addClass with base utility + modifier-prefixed class — keeps modifier class in addClass
     {
       code: `Div().addClass("p-4 hover:bg-blue-600")`,
       output: `Div().padding("4").addClass("hover:bg-blue-600")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "p-4", method: "padding()" } }],
+      errors: [
+        { messageId: "useKnownModifier", data: { callee: "addClass", className: "p-4", method: "padding()" } },
+        { messageId: "useVariantMethod", data: { callee: "addClass", className: "hover:bg-blue-600", variantMethod: "on", variant: "hover", method: "background()" } },
+      ],
     },
     // addClass with multiple base utilities
     {
