@@ -460,31 +460,33 @@ runSuite("no-ternary-in-view-builder", noTernaryInViewBuilder, {
     { code: `Div(isReady ? "Ready" : null)` },
     // Ternary with non-element function call — fine (unknown)
     { code: `Div(cond ? getText() : "fallback")` },
+    // Ternary with non-element function calls on both sides — fine
+    { code: `Div(isLoggedIn ? getUserPanel() : getLoginForm())` },
   ],
   invalid: [
-    // Direct ternary with view elements
+    // Direct ternary with known view elements
     {
-      code: `Div(isLoggedIn ? UserPanel() : LoginForm())`,
+      code: `Div(isLoggedIn ? Span("Yes") : P("No"))`,
       errors: [{ messageId: "noTernaryInViewBuilder", data: { name: "Div" } }],
     },
-    // Ternary with one side being a view element
+    // Ternary with one side being a known view element, other null
     {
-      code: `Div(Header(), isAdmin ? AdminPanel() : null, Footer())`,
+      code: `Div(Header(), isAdmin ? Nav("admin") : null, Footer())`,
       errors: [{ messageId: "noTernaryInViewBuilder", data: { name: "Div" } }],
     },
     // Ternary inside array children
     {
-      code: `Div([Header(), isAdmin ? AdminPanel() : null])`,
+      code: `Div([Header(), isAdmin ? Nav("admin") : null])`,
       errors: [{ messageId: "noTernaryInViewBuilder", data: { name: "Div" } }],
     },
     // Works with other element functions
     {
-      code: `Ul(isExpanded ? FullList() : Summary())`,
+      code: `Ul(isExpanded ? Li("A") : Li("B"))`,
       errors: [{ messageId: "noTernaryInViewBuilder", data: { name: "Ul" } }],
     },
     // Multiple ternaries with view elements
     {
-      code: `Div(a ? B() : C(), d ? E() : F())`,
+      code: `Div(a ? Span("a") : Span("b"), d ? Em("d") : Em("e"))`,
       errors: [
         { messageId: "noTernaryInViewBuilder", data: { name: "Div" } },
         { messageId: "noTernaryInViewBuilder", data: { name: "Div" } },

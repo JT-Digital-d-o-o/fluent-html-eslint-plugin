@@ -50,18 +50,23 @@ function isLiteral(node: any): boolean {
   return false;
 }
 
-function hasViewElement(node: any): boolean {
+function couldBeViewElement(node: any): boolean {
   if (isLiteral(node)) return false;
-  if (node.type === "ConditionalExpression") {
-    return hasViewElement(node.consequent) || hasViewElement(node.alternate);
-  }
   if (isElementCall(node)) return true;
-  // If it's a chain like Div().addClass("x"), walk up the member expression
+  // Chain like Div().addClass("x") — walk up the member expression
   if (node.type === "CallExpression" && node.callee.type === "MemberExpression") {
-    return hasViewElement(node.callee.object);
+    return couldBeViewElement(node.callee.object);
   }
-  // Unknown expression (variable, function call, etc.) — don't flag
+  // Nested ternary
+  if (node.type === "ConditionalExpression") {
+    return couldBeViewElement(node.consequent) || couldBeViewElement(node.alternate);
+  }
+  // Unknown (variable, non-element function call, etc.) — don't flag
   return false;
+}
+
+function hasSideWithViewElement(node: any): boolean {
+  return couldBeViewElement(node.consequent) || couldBeViewElement(node.alternate);
 }
 
 const rule: Rule.RuleModule = {
@@ -88,7 +93,7 @@ const rule: Rule.RuleModule = {
         const funcName = node.callee.name;
 
         for (const arg of node.arguments) {
-          if (arg.type === "ConditionalExpression" && hasViewElement(arg)) {
+          if (arg.type === "ConditionalExpression" && hasSideWithViewElement(arg)) {
             context.report({
               node: arg,
               messageId: "noTernaryInViewBuilder",
@@ -99,7 +104,7 @@ const rule: Rule.RuleModule = {
           // Also check inside array children: Div([cond ? A() : B()])
           if (arg.type === "ArrayExpression") {
             for (const el of arg.elements) {
-              if (el && el.type === "ConditionalExpression" && hasViewElement(el)) {
+              if (el && el.type === "ConditionalExpression" && hasSideWithViewElement(el)) {
                 context.report({
                   node: el,
                   messageId: "noTernaryInViewBuilder",
