@@ -59,7 +59,7 @@ const rule: Rule.RuleModule = {
         fix(fixer: any) {
           // Remove `: View` — the annotation includes the colon in some parsers,
           // but to be safe we remove from just before the annotation to its end.
-          const sourceCode = context.getSourceCode();
+          const sourceCode = context.sourceCode ?? context.getSourceCode();
           const tokenBefore = sourceCode.getTokenBefore(annotation);
           if (tokenBefore && tokenBefore.value === ":") {
             return fixer.removeRange([tokenBefore.range[0], annotation.range[1]]);
