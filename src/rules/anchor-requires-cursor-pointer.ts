@@ -13,6 +13,7 @@ const rule: Rule.RuleModule = {
       missingCursorPointer:
         'Anchor element is missing .cursor("pointer"). Add .cursor("pointer") to the chain for a pointer cursor on hover.',
     },
+    fixable: "code",
     schema: [],
   },
 
@@ -90,9 +91,29 @@ const rule: Rule.RuleModule = {
         }
 
         if (!hasCursorPointer) {
+          // Find the outermost call in the chain to append .cursor("pointer")
+          let outermost = node;
+          let walk = node.parent;
+          while (walk) {
+            if (
+              walk.type === "MemberExpression" &&
+              walk.parent &&
+              walk.parent.type === "CallExpression" &&
+              walk.parent.callee === walk
+            ) {
+              outermost = walk.parent;
+              walk = walk.parent.parent;
+            } else {
+              break;
+            }
+          }
+
           context.report({
             node,
             messageId: "missingCursorPointer",
+            fix(fixer) {
+              return fixer.insertTextAfter(outermost, '.cursor("pointer")');
+            },
           });
         }
       },

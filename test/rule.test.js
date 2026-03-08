@@ -534,26 +534,31 @@ runSuite("anchor-requires-cursor-pointer", anchorRequiresCursorPointer, {
     // A() without cursor
     {
       code: `A("Click")`,
+      output: `A("Click").cursor("pointer")`,
       errors: [{ messageId: "missingCursorPointer" }],
     },
     // A() with href but no cursor
     {
       code: `A("Click").setHref("/page")`,
+      output: `A("Click").setHref("/page").cursor("pointer")`,
       errors: [{ messageId: "missingCursorPointer" }],
     },
     // A() with other cursor value (not "pointer")
     {
       code: `A("Click").cursor("default")`,
+      output: `A("Click").cursor("default").cursor("pointer")`,
       errors: [{ messageId: "missingCursorPointer" }],
     },
     // A() with styling but no cursor
     {
       code: `A("Click").setHref("/page").setClass("text-blue-500 underline")`,
+      output: `A("Click").setHref("/page").setClass("text-blue-500 underline").cursor("pointer")`,
       errors: [{ messageId: "missingCursorPointer" }],
     },
     // A() with children and chaining but no cursor
     {
       code: `A("Click", Span("icon")).setHref("/page").padding("4")`,
+      output: `A("Click", Span("icon")).setHref("/page").padding("4").cursor("pointer")`,
       errors: [{ messageId: "missingCursorPointer" }],
     },
   ],
