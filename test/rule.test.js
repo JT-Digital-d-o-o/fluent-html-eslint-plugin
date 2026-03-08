@@ -506,6 +506,60 @@ runSuite("no-ternary-in-view-builder", noTernaryInViewBuilder, {
 });
 
 // ------------------------------------
+// anchor-requires-cursor-pointer
+// ------------------------------------
+
+const anchorRequiresCursorPointer = require("../dist/rules/anchor-requires-cursor-pointer");
+
+runSuite("anchor-requires-cursor-pointer", anchorRequiresCursorPointer, {
+  valid: [
+    // A() with cursor("pointer") — correct
+    { code: `A("Click").setHref("/page").cursor("pointer")` },
+    // cursor("pointer") before other methods
+    { code: `A("Click").cursor("pointer").setHref("/page")` },
+    // cursor-pointer via addClass
+    { code: `A("Click").addClass("cursor-pointer")` },
+    // cursor-pointer via setClass
+    { code: `A("Click").setClass("cursor-pointer")` },
+    // cursor-pointer in mixed classes
+    { code: `A("Click").setClass("text-blue-500 cursor-pointer underline")` },
+    // Not an anchor — no warning
+    { code: `Div("hello")` },
+    // Not an anchor — no warning
+    { code: `Button("Go").setHref("/page")` },
+    // A() with cursor("pointer") deep in chain
+    { code: `A("Click").setHref("/page").setClass("text-blue-500").cursor("pointer").padding("4")` },
+  ],
+  invalid: [
+    // A() without cursor
+    {
+      code: `A("Click")`,
+      errors: [{ messageId: "missingCursorPointer" }],
+    },
+    // A() with href but no cursor
+    {
+      code: `A("Click").setHref("/page")`,
+      errors: [{ messageId: "missingCursorPointer" }],
+    },
+    // A() with other cursor value (not "pointer")
+    {
+      code: `A("Click").cursor("default")`,
+      errors: [{ messageId: "missingCursorPointer" }],
+    },
+    // A() with styling but no cursor
+    {
+      code: `A("Click").setHref("/page").setClass("text-blue-500 underline")`,
+      errors: [{ messageId: "missingCursorPointer" }],
+    },
+    // A() with children and chaining but no cursor
+    {
+      code: `A("Click", Span("icon")).setHref("/page").padding("4")`,
+      errors: [{ messageId: "missingCursorPointer" }],
+    },
+  ],
+});
+
+// ------------------------------------
 // no-superfluous-view-return-type
 // ------------------------------------
 

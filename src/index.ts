@@ -13,6 +13,7 @@ import preferSetMethod = require("./rules/prefer-set-method");
 import noRawIds = require("./rules/no-raw-ids");
 import noTernaryInViewBuilder = require("./rules/no-ternary-in-view-builder");
 import noSuperfluousViewReturnType = require("./rules/no-superfluous-view-return-type");
+import anchorRequiresCursorPointer = require("./rules/anchor-requires-cursor-pointer");
 
 const plugin = {
   rules: {
@@ -31,6 +32,7 @@ const plugin = {
     "no-raw-ids": noRawIds,
     "no-ternary-in-view-builder": noTernaryInViewBuilder,
     "no-superfluous-view-return-type": noSuperfluousViewReturnType,
+    "anchor-requires-cursor-pointer": anchorRequiresCursorPointer,
   },
   configs: {
     recommended: {
@@ -51,6 +53,7 @@ const plugin = {
         "fluent-html/no-raw-ids": "warn",
         "fluent-html/no-ternary-in-view-builder": "warn",
         "fluent-html/no-superfluous-view-return-type": "warn",
+        "fluent-html/anchor-requires-cursor-pointer": "warn",
       },
     },
   },
