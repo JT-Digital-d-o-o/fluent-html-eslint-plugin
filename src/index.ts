@@ -12,6 +12,7 @@ import noInnerHtmlSwap = require("./rules/no-innerhtml-swap");
 import preferSetMethod = require("./rules/prefer-set-method");
 import noRawIds = require("./rules/no-raw-ids");
 import noTernaryInViewBuilder = require("./rules/no-ternary-in-view-builder");
+import noSuperfluousViewReturnType = require("./rules/no-superfluous-view-return-type");
 
 const plugin = {
   rules: {
@@ -29,6 +30,7 @@ const plugin = {
     "prefer-set-method": preferSetMethod,
     "no-raw-ids": noRawIds,
     "no-ternary-in-view-builder": noTernaryInViewBuilder,
+    "no-superfluous-view-return-type": noSuperfluousViewReturnType,
   },
   configs: {
     recommended: {
@@ -48,6 +50,7 @@ const plugin = {
         "fluent-html/prefer-set-method": "warn",
         "fluent-html/no-raw-ids": "warn",
         "fluent-html/no-ternary-in-view-builder": "warn",
+        "fluent-html/no-superfluous-view-return-type": "warn",
       },
     },
   },

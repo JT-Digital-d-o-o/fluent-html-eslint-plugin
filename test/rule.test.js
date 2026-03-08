@@ -506,6 +506,73 @@ runSuite("no-ternary-in-view-builder", noTernaryInViewBuilder, {
 });
 
 // ------------------------------------
+// no-superfluous-view-return-type
+// ------------------------------------
+
+const noSuperfluousViewReturnType = require("../dist/rules/no-superfluous-view-return-type");
+
+const tsTester = new RuleTester({
+  parser: require.resolve("@typescript-eslint/parser"),
+  parserOptions: { ecmaVersion: 2020, sourceType: "module" },
+});
+
+function runTsSuite(name, rule, tests) {
+  console.log(`\n${"=".repeat(50)}`);
+  console.log(name);
+  console.log("=".repeat(50));
+  try {
+    tsTester.run(name, rule, tests);
+    const total = tests.valid.length + tests.invalid.length;
+    passCount += total;
+    console.log(`  ✅ ${total} cases passed`);
+  } catch (e) {
+    failCount++;
+    console.log(`  ❌ FAILED: ${e.message}`);
+  }
+}
+
+runTsSuite("no-superfluous-view-return-type", noSuperfluousViewReturnType, {
+  valid: [
+    // No return type — correct
+    `function MyView({ title }: Props) { return Div(title); }`,
+    // Non-View return type — not our concern
+    `function getCount(): number { return 42; }`,
+    // Arrow function without return type
+    `const MyView = ({ title }: Props) => Div(title);`,
+    // Returns string, not View
+    `function getName(): string { return "hello"; }`,
+    // Multi-statement, no return type
+    `function MyView({ title }: Props) { const x = 1; return Div(title); }`,
+  ],
+  invalid: [
+    // Function declaration with : View
+    {
+      code: `function MyView({ title }: Props): View { return Div(title); }`,
+      output: `function MyView({ title }: Props) { return Div(title); }`,
+      errors: [{ messageId: "superfluousReturnType", data: { type: "View" } }],
+    },
+    // Arrow function with : View
+    {
+      code: `const MyView = ({ title }: Props): View => Div(title);`,
+      output: `const MyView = ({ title }: Props) => Div(title);`,
+      errors: [{ messageId: "superfluousReturnType", data: { type: "View" } }],
+    },
+    // Multi-statement function with : View
+    {
+      code: `function MyView({ title }: Props): View { const x = 1; const y = 2; return Div(title); }`,
+      output: `function MyView({ title }: Props) { const x = 1; const y = 2; return Div(title); }`,
+      errors: [{ messageId: "superfluousReturnType", data: { type: "View" } }],
+    },
+    // Function expression with : View
+    {
+      code: `const MyView = function({ title }: Props): View { return Div(title); }`,
+      output: `const MyView = function({ title }: Props) { return Div(title); }`,
+      errors: [{ messageId: "superfluousReturnType", data: { type: "View" } }],
+    },
+  ],
+});
+
+// ------------------------------------
 // Summary
 // ------------------------------------
 
