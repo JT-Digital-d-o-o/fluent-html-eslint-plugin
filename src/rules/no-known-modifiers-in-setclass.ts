@@ -328,6 +328,7 @@ const FIXABLE_PATTERNS: FixablePattern[] = [
   { pattern: "uppercase", methodName: "uppercase", exactMatch: true },
   { pattern: "lowercase", methodName: "lowercase", exactMatch: true },
   { pattern: "capitalize", methodName: "capitalize", exactMatch: true },
+  { pattern: "no-underline", methodName: "noUnderline", exactMatch: true },
   { pattern: "underline", methodName: "underline", exactMatch: true },
   { pattern: "line-through", methodName: "lineThrough", exactMatch: true },
   { pattern: "truncate", methodName: "truncate", exactMatch: true },

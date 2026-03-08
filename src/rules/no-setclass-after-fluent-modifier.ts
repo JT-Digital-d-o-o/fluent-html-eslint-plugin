@@ -23,6 +23,7 @@ const FLUENT_MODIFIERS = new Set([
   "lowercase",
   "capitalize",
   "underline",
+  "noUnderline",
   "lineThrough",
   "truncate",
   "leading",
