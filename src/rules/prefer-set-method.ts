@@ -45,11 +45,36 @@ const ATTRIBUTE_TO_METHOD: Record<string, string> = {
   // Embedded
   sandbox: "setSandbox",
   allow: "setAllow",
-  // SVG
+  // SVG common
   viewBox: "setViewBox",
   xmlns: "setXmlns",
   fill: "setFill",
   stroke: "setStroke",
+  "stroke-width": "setStrokeWidth",
+  "stroke-linecap": "setStrokeLinecap",
+  "stroke-linejoin": "setStrokeLinejoin",
+  "stroke-dasharray": "setStrokeDasharray",
+  transform: "setTransform",
+  // SVG element-specific
+  cx: "setCx",
+  cy: "setCy",
+  r: "setR",
+  rx: "setRx",
+  ry: "setRy",
+  x1: "setX1",
+  y1: "setY1",
+  x2: "setX2",
+  y2: "setY2",
+  d: "setD",
+  "fill-rule": "setFillRule",
+  "clip-rule": "setClipRule",
+  points: "setPoints",
+  "text-anchor": "setTextAnchor",
+  "dominant-baseline": "setDominantBaseline",
+  "font-size": "setFontSize",
+  "font-family": "setFontFamily",
+  dx: "setDx",
+  dy: "setDy",
   // Document
   charset: "setCharset",
   content: "setContent",
@@ -85,7 +110,7 @@ const rule: Rule.RuleModule = {
     type: "suggestion",
     docs: {
       description:
-        'Prefer dedicated setter methods over addAttribute() for standard HTML attributes. e.g. .setType("submit") instead of .addAttribute("type", "submit")',
+        'Prefer dedicated setter methods over addAttribute() for standard HTML and SVG attributes. e.g. .setType("submit") instead of .addAttribute("type", "submit")',
       category: "Best Practices",
       recommended: true,
     },

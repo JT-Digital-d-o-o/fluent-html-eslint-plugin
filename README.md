@@ -1,10 +1,10 @@
 # eslint-plugin-fluent-html
 
-ESLint plugin for [fluent-html](https://github.com/JT-Digital-d-o-o/fluent-html) that warns when `.setClass()` is used with Tailwind CSS classes that have dedicated SwiftUI-style methods.
+ESLint plugin for [fluent-html](https://github.com/JT-Digital-d-o-o/fluent-html) that warns when `.setClass()` is used with Tailwind CSS classes that have dedicated fluent-styling methods.
 
 ## The Problem
 
-When using fluent-html's SwiftUI-style API, calling `.setClass()` can override styles set by dedicated methods:
+When using fluent-html's fluent-styling API, calling `.setClass()` can override styles set by dedicated methods:
 
 ```typescript
 // This is problematic:
@@ -36,7 +36,7 @@ Div()
 
 ### Auto-Fix
 
-Run ESLint with `--fix` to automatically convert `.setClass()` calls to SwiftUI-style methods:
+Run ESLint with `--fix` to automatically convert `.setClass()` calls to fluent-styling methods:
 
 ```bash
 # Fix all files
@@ -115,7 +115,7 @@ module.exports = {
 
 ## Rule: `no-known-modifiers-in-setclass`
 
-Warns when `.setClass()` is called with Tailwind classes that have dedicated SwiftUI-style methods. **This rule is auto-fixable.**
+Warns when `.setClass()` is called with Tailwind classes that have dedicated fluent-styling methods. **This rule is auto-fixable.**
 
 ### Detected Patterns
 
@@ -183,7 +183,7 @@ Div().setClass("my-custom-class another-custom-class")
   - Custom classes without dedicated methods
 - **Use `.setClass()`** only when:
   - You need to completely replace all classes
-  - You're using custom classes that don't conflict with SwiftUI methods
+  - You're using custom classes that don't conflict with fluent-styling methods
 
 ## Configuration
 

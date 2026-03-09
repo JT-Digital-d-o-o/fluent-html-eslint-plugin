@@ -198,10 +198,10 @@ Or for a whole file:
 1. **Prevents style overrides** - `.setClass()` replaces all classes; dedicated methods append them
 2. **Type safety** - Methods are type-checked and autocompleted
 3. **Readability** - `.background("red-500")` is clearer than `.setClass("bg-red-500")`
-4. **Consistency** - Encourages using the SwiftUI-style API throughout your codebase
+4. **Consistency** - Encourages using the fluent-styling API throughout your codebase
 
 ## Next Steps
 
 - See [README.md](./README.md) for full documentation
 - Check [example/](./example/) for code examples
-- Read the [fluent-html SwiftUI styling guide](../AI-SWIFTUI-STYLING.md)
+- Read the [fluent-html fluent-styling guide](../FLUENT-STYLING.md)
