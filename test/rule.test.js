@@ -632,6 +632,142 @@ runTsSuite("no-superfluous-view-return-type", noSuperfluousViewReturnType, {
 });
 
 // ------------------------------------
+// prefer-unit-overload
+// ------------------------------------
+
+const preferUnitOverload = require("../dist/rules/prefer-unit-overload");
+
+runSuite("prefer-unit-overload", preferUnitOverload, {
+  valid: [
+    // Named Tailwind values — no warning
+    { code: `Div().w("full")` },
+    { code: `Div().minH("screen")` },
+    { code: `Div().padding("4")` },
+    { code: `Div().gap("x", "2")` },
+    { code: `Div().top("0")` },
+    // Already using unit overload — no warning
+    { code: `Div().w("px", 200)` },
+    { code: `Div().minH("rem", 12)` },
+    { code: `Div().padding("em", 1.5)` },
+    // Bracket values on non-unit methods — not our concern
+    { code: `Div().textSize("[13px]")` },
+    { code: `Div().opacity("[0.33]")` },
+    { code: `Div().zIndex("[999]")` },
+    // Bracket values without a recognized CSS unit
+    { code: `Div().w("[calc(100%-2rem)]")` },
+    { code: `Div().h("[var(--height)]")` },
+    { code: `Div().minH("[100cqw]")` },
+    // Non-numeric bracket values
+    { code: `Div().w("[fit-content]")` },
+    // Template literals — skip
+    { code: "Div().w(`[${size}px]`)" },
+  ],
+  invalid: [
+    // Sizing methods
+    {
+      code: `Div().w("[200px]")`,
+      output: `Div().w("px", 200)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "w", unit: "px", amount: "200", raw: "[200px]" } }],
+    },
+    {
+      code: `Div().h("[100vh]")`,
+      output: `Div().h("vh", 100)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "h", unit: "vh", amount: "100", raw: "[100vh]" } }],
+    },
+    {
+      code: `Div().minH("[180px]")`,
+      output: `Div().minH("px", 180)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "minH", unit: "px", amount: "180", raw: "[180px]" } }],
+    },
+    {
+      code: `Div().maxW("[64rem]")`,
+      output: `Div().maxW("rem", 64)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "maxW", unit: "rem", amount: "64", raw: "[64rem]" } }],
+    },
+    {
+      code: `Div().minW("[300px]")`,
+      output: `Div().minW("px", 300)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "minW", unit: "px", amount: "300", raw: "[300px]" } }],
+    },
+    {
+      code: `Div().maxH("[80dvh]")`,
+      output: `Div().maxH("dvh", 80)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "maxH", unit: "dvh", amount: "80", raw: "[80dvh]" } }],
+    },
+    // Spacing
+    {
+      code: `Div().padding("[16px]")`,
+      output: `Div().padding("px", 16)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "padding", unit: "px", amount: "16", raw: "[16px]" } }],
+    },
+    {
+      code: `Div().margin("[1.5rem]")`,
+      output: `Div().margin("rem", 1.5)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "margin", unit: "rem", amount: "1.5", raw: "[1.5rem]" } }],
+    },
+    {
+      code: `Div().gap("[8px]")`,
+      output: `Div().gap("px", 8)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "gap", unit: "px", amount: "8", raw: "[8px]" } }],
+    },
+    // Position
+    {
+      code: `Div().top("[10px]")`,
+      output: `Div().top("px", 10)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "top", unit: "px", amount: "10", raw: "[10px]" } }],
+    },
+    {
+      code: `Div().left("[50vw]")`,
+      output: `Div().left("vw", 50)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "left", unit: "vw", amount: "50", raw: "[50vw]" } }],
+    },
+    {
+      code: `Div().inset("[0px]")`,
+      output: `Div().inset("px", 0)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "inset", unit: "px", amount: "0", raw: "[0px]" } }],
+    },
+    {
+      code: `Div().right("[2rem]")`,
+      output: `Div().right("rem", 2)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "right", unit: "rem", amount: "2", raw: "[2rem]" } }],
+    },
+    {
+      code: `Div().bottom("[100%]")`,
+      output: `Div().bottom("%", 100)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "bottom", unit: "%", amount: "100", raw: "[100%]" } }],
+    },
+    // Decimal values
+    {
+      code: `Div().padding("[0.75rem]")`,
+      output: `Div().padding("rem", 0.75)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "padding", unit: "rem", amount: "0.75", raw: "[0.75rem]" } }],
+    },
+    // All unit types
+    {
+      code: `Div().h("[100svh]")`,
+      output: `Div().h("svh", 100)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "h", unit: "svh", amount: "100", raw: "[100svh]" } }],
+    },
+    {
+      code: `Div().h("[100lvh]")`,
+      output: `Div().h("lvh", 100)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "h", unit: "lvh", amount: "100", raw: "[100lvh]" } }],
+    },
+    {
+      code: `Div().w("[50em]")`,
+      output: `Div().w("em", 50)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "w", unit: "em", amount: "50", raw: "[50em]" } }],
+    },
+    // In a chain
+    {
+      code: `Div().padding("4").w("[200px]").background("white")`,
+      output: `Div().padding("4").w("px", 200).background("white")`,
+      errors: [{ messageId: "preferUnitOverload" }],
+    },
+  ],
+});
+
+// ------------------------------------
 // Summary
 // ------------------------------------
 
