@@ -25,8 +25,8 @@ const rule: Rule.RuleModule = {
           node,
           messageId: "unnecessarySpaces",
           loc: {
-            start: context.getSourceCode().getLocFromIndex(nodeStart + match.index),
-            end: context.getSourceCode().getLocFromIndex(nodeStart + match.index + match[0].length),
+            start: context.sourceCode.getLocFromIndex(nodeStart + match.index),
+            end: context.sourceCode.getLocFromIndex(nodeStart + match.index + match[0].length),
           },
           fix(fixer) {
             return fixer.replaceTextRange(
@@ -45,8 +45,8 @@ const rule: Rule.RuleModule = {
             node,
             messageId: "unnecessarySpaces",
             loc: {
-              start: context.getSourceCode().getLocFromIndex(nodeStart),
-              end: context.getSourceCode().getLocFromIndex(nodeStart + leadingSpaces[0].length),
+              start: context.sourceCode.getLocFromIndex(nodeStart),
+              end: context.sourceCode.getLocFromIndex(nodeStart + leadingSpaces[0].length),
             },
             fix(fixer) {
               return fixer.removeRange([nodeStart, nodeStart + leadingSpaces[0].length]);
@@ -64,8 +64,8 @@ const rule: Rule.RuleModule = {
             node,
             messageId: "unnecessarySpaces",
             loc: {
-              start: context.getSourceCode().getLocFromIndex(trailingStart),
-              end: context.getSourceCode().getLocFromIndex(trailingStart + trailingSpaces[0].length),
+              start: context.sourceCode.getLocFromIndex(trailingStart),
+              end: context.sourceCode.getLocFromIndex(trailingStart + trailingSpaces[0].length),
             },
             fix(fixer) {
               return fixer.removeRange([trailingStart, trailingStart + trailingSpaces[0].length]);

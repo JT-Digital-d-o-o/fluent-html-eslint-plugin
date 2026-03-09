@@ -118,7 +118,7 @@ const rule: Rule.RuleModule = {
         const method = ATTRIBUTE_TO_METHOD[attrName];
         if (!method) return;
 
-        const sourceCode = context.getSourceCode();
+        const sourceCode = context.sourceCode;
         const valueText = sourceCode.getText(valueArg);
 
         context.report({

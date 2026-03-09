@@ -77,7 +77,7 @@ const rule: Rule.RuleModule = {
         // Skip if any element is a spread — can't convert to variadic
         if (arg.elements.some((el: any) => el && el.type === "SpreadElement")) return;
 
-        const sourceCode = context.getSourceCode();
+        const sourceCode = context.sourceCode;
 
         context.report({
           node: arg,

@@ -192,8 +192,8 @@ const rule: Rule.RuleModule = {
               messageId: "conflictingClasses",
               data: { first: existing, second: className },
               loc: {
-                start: context.getSourceCode().getLocFromIndex(nodeStart + classIndex),
-                end: context.getSourceCode().getLocFromIndex(nodeStart + classIndex + className.length),
+                start: context.sourceCode.getLocFromIndex(nodeStart + classIndex),
+                end: context.sourceCode.getLocFromIndex(nodeStart + classIndex + className.length),
               },
             });
           } else {
