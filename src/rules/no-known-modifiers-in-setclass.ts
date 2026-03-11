@@ -317,6 +317,13 @@ const FIXABLE_PATTERNS: FixablePattern[] = [
   // Whitespace
   { pattern: "whitespace-", methodName: "whitespace" },
 
+  // List style
+  { pattern: "list-disc", methodName: "listStyleType", exactMatch: true, fixedValue: "disc" },
+  { pattern: "list-decimal", methodName: "listStyleType", exactMatch: true, fixedValue: "decimal" },
+  { pattern: "list-none", methodName: "listStyleType", exactMatch: true, fixedValue: "none" },
+  { pattern: "list-inside", methodName: "listStylePosition", exactMatch: true, fixedValue: "inside" },
+  { pattern: "list-outside", methodName: "listStylePosition", exactMatch: true, fixedValue: "outside" },
+
   // Accessibility
   { pattern: "sr-only", methodName: "srOnly", exactMatch: true },
 

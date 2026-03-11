@@ -110,6 +110,39 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
         { messageId: "useKnownModifier", data: { callee: "setClasses", className: "rounded", method: "rounded()" } },
       ],
     },
+    // addClass with list-disc
+    {
+      code: `Div().addClass("list-disc")`,
+      output: `Div().listStyleType("disc")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "list-disc", method: "listStyleType('disc')" } }],
+    },
+    // addClass with list-inside
+    {
+      code: `Div().addClass("list-inside")`,
+      output: `Div().listStylePosition("inside")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "list-inside", method: "listStylePosition('inside')" } }],
+    },
+    // addClass with list-disc list-inside combined
+    {
+      code: `Div().addClass("list-disc list-inside")`,
+      output: `Div().listStyleType("disc").listStylePosition("inside")`,
+      errors: [
+        { messageId: "useKnownModifier", data: { callee: "addClass", className: "list-disc", method: "listStyleType('disc')" } },
+        { messageId: "useKnownModifier", data: { callee: "addClass", className: "list-inside", method: "listStylePosition('inside')" } },
+      ],
+    },
+    // addClass with list-none
+    {
+      code: `Div().addClass("list-none")`,
+      output: `Div().listStyleType("none")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "list-none", method: "listStyleType('none')" } }],
+    },
+    // addClass with list-decimal
+    {
+      code: `Div().addClass("list-decimal")`,
+      output: `Div().listStyleType("decimal")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "list-decimal", method: "listStyleType('decimal')" } }],
+    },
   ],
 });
 
