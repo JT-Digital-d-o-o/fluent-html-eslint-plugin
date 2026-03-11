@@ -15,6 +15,7 @@ import noTernaryInViewBuilder = require("./rules/no-ternary-in-view-builder");
 import noSuperfluousViewReturnType = require("./rules/no-superfluous-view-return-type");
 import anchorRequiresCursorPointer = require("./rules/anchor-requires-cursor-pointer");
 import preferUnitOverload = require("./rules/prefer-unit-overload");
+import preferHtmxApi = require("./rules/prefer-htmx-api");
 
 const plugin = {
   rules: {
@@ -35,6 +36,7 @@ const plugin = {
     "no-superfluous-view-return-type": noSuperfluousViewReturnType,
     "anchor-requires-cursor-pointer": anchorRequiresCursorPointer,
     "prefer-unit-overload": preferUnitOverload,
+    "prefer-htmx-api": preferHtmxApi,
   },
   configs: {
     recommended: {
@@ -57,6 +59,7 @@ const plugin = {
         "fluent-html/no-superfluous-view-return-type": "warn",
         "fluent-html/anchor-requires-cursor-pointer": "warn",
         "fluent-html/prefer-unit-overload": "warn",
+        "fluent-html/prefer-htmx-api": "warn",
       },
     },
   },

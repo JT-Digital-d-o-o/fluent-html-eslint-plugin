@@ -801,6 +801,73 @@ runSuite("prefer-unit-overload", preferUnitOverload, {
 });
 
 // ------------------------------------
+// prefer-htmx-api
+// ------------------------------------
+
+const preferHtmxApi = require("../dist/rules/prefer-htmx-api");
+
+runSuite("prefer-htmx-api", preferHtmxApi, {
+  valid: [
+    // Using the HTMX API
+    { code: `Div().hxGet("/endpoint")` },
+    { code: `Div().hxPost("/endpoint", { trigger: "change", include: "this" })` },
+    { code: `Div().setHtmx({ endpoint: "/api", method: "post", vals: { key: "val" } })` },
+    // addAttribute with non-hx attributes is fine
+    { code: `Div().addAttribute("data-foo", "bar")` },
+    { code: `Div().addAttribute("aria-label", "hello")` },
+    // Dynamic attribute names
+    { code: `Div().addAttribute(attrName, "value")` },
+  ],
+  invalid: [
+    {
+      code: `Div().addAttribute("hx-trigger", "change")`,
+      errors: [{ messageId: "preferHtmxApi", data: { attr: "hx-trigger" } }],
+    },
+    {
+      code: `Div().addAttribute("hx-include", "this")`,
+      errors: [{ messageId: "preferHtmxApi", data: { attr: "hx-include" } }],
+    },
+    {
+      code: `Div().addAttribute("hx-vals", JSON.stringify({ filePath, line }))`,
+      errors: [{ messageId: "preferHtmxApi", data: { attr: "hx-vals" } }],
+    },
+    {
+      code: `Div().addAttribute("hx-get", "/api/data")`,
+      errors: [{ messageId: "preferHtmxApi", data: { attr: "hx-get" } }],
+    },
+    {
+      code: `Div().addAttribute("hx-post", "/api/submit")`,
+      errors: [{ messageId: "preferHtmxApi", data: { attr: "hx-post" } }],
+    },
+    {
+      code: `Div().addAttribute("hx-target", "#result")`,
+      errors: [{ messageId: "preferHtmxApi", data: { attr: "hx-target" } }],
+    },
+    {
+      code: `Div().addAttribute("hx-swap", "outerHTML")`,
+      errors: [{ messageId: "preferHtmxApi", data: { attr: "hx-swap" } }],
+    },
+    // Multiple hx-* in a chain
+    {
+      code: `Div().addAttribute("hx-trigger", "change").addAttribute("hx-include", "this").addAttribute("hx-vals", "{}")`,
+      errors: [
+        { messageId: "preferHtmxApi", data: { attr: "hx-vals" } },
+        { messageId: "preferHtmxApi", data: { attr: "hx-include" } },
+        { messageId: "preferHtmxApi", data: { attr: "hx-trigger" } },
+      ],
+    },
+    {
+      code: `Div().addAttribute("hx-confirm", "Are you sure?")`,
+      errors: [{ messageId: "preferHtmxApi", data: { attr: "hx-confirm" } }],
+    },
+    {
+      code: `Div().addAttribute("hx-boost", "true")`,
+      errors: [{ messageId: "preferHtmxApi", data: { attr: "hx-boost" } }],
+    },
+  ],
+});
+
+// ------------------------------------
 // Summary
 // ------------------------------------
 
