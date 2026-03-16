@@ -39,6 +39,7 @@ const FLUENT_MODIFIERS = new Set([
   "aspect",
   // Flexbox
   "flex",
+  "flex1",
   "flexDirection",
   "flexWrap",
   "justifyContent",
@@ -53,6 +54,7 @@ const FLUENT_MODIFIERS = new Set([
   "colSpan",
   // Borders & Effects
   "border",
+  "borderStyle",
   "rounded",
   "shadow",
   "ring",

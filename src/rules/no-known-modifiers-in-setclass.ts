@@ -124,7 +124,7 @@ const FIXABLE_PATTERNS: FixablePattern[] = [
   { pattern: "flex-wrap-reverse", methodName: "flexWrap", exactMatch: true, fixedValue: "wrap-reverse" },
   { pattern: "flex-wrap", methodName: "flexWrap", exactMatch: true, fixedValue: "wrap" },
   { pattern: "flex-nowrap", methodName: "flexWrap", exactMatch: true, fixedValue: "nowrap" },
-  { pattern: "flex-1", methodName: "flex", exactMatch: true, fixedValue: "1" },
+  { pattern: "flex-1", methodName: "flex1", exactMatch: true },
   { pattern: "flex-auto", methodName: "flex", exactMatch: true, fixedValue: "auto" },
   { pattern: "flex-initial", methodName: "flex", exactMatch: true, fixedValue: "initial" },
   { pattern: "flex-none", methodName: "flex", exactMatch: true, fixedValue: "none" },
@@ -190,6 +190,14 @@ const FIXABLE_PATTERNS: FixablePattern[] = [
   { pattern: "divide-y", methodName: "divideY", exactMatch: true },
 
   // Border width
+  // Border style
+  { pattern: "border-solid", methodName: "borderStyle", exactMatch: true, fixedValue: "solid" },
+  { pattern: "border-dashed", methodName: "borderStyle", exactMatch: true, fixedValue: "dashed" },
+  { pattern: "border-dotted", methodName: "borderStyle", exactMatch: true, fixedValue: "dotted" },
+  { pattern: "border-double", methodName: "borderStyle", exactMatch: true, fixedValue: "double" },
+  { pattern: "border-hidden", methodName: "borderStyle", exactMatch: true, fixedValue: "hidden" },
+  { pattern: "border-none", methodName: "borderStyle", exactMatch: true, fixedValue: "none" },
+
   { pattern: "border-2", methodName: "border", exactMatch: true, fixedValue: "2" },
   { pattern: "border-4", methodName: "border", exactMatch: true, fixedValue: "4" },
   { pattern: "border-8", methodName: "border", exactMatch: true, fixedValue: "8" },
