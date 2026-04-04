@@ -42,8 +42,20 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
     { code: `Div().addClass("print:hidden")` },
     // addClass with multi-level variant — skipped for now
     { code: `Div().addClass("sm:hover:bg-blue-600")` },
+    // ignoredClasses — custom CSS classes with bg- prefix should not be flagged
+    { code: `Div().addClass("bg-grid")`, options: [{ ignoredClasses: ["bg-grid"] }] },
+    { code: `Div().addClass("bg-glow bg-glow-1 bg-glow-2")`, options: [{ ignoredClasses: ["bg-glow", "bg-glow-1", "bg-glow-2"] }] },
+    // ignoredClasses with other utilities — only ignored classes are skipped
+    { code: `Div().setClass("bg-grid custom-thing")`, options: [{ ignoredClasses: ["bg-grid"] }] },
   ],
   invalid: [
+    // ignoredClasses — bg-red-500 is NOT in the ignore list, so it's still flagged
+    {
+      code: `Div().addClass("bg-grid bg-red-500")`,
+      options: [{ ignoredClasses: ["bg-grid"] }],
+      output: `Div().background("red-500").addClass("bg-grid")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "bg-red-500", method: "background()" } }],
+    },
     // addClass with single base utility
     {
       code: `Div().addClass("mt-2")`,

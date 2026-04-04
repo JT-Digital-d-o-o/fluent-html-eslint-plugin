@@ -476,11 +476,28 @@ const rule: Rule.RuleModule = {
       useVariantMethod: "Avoid using .{{callee}}() with '{{className}}'. Use .{{variantMethod}}(\"{{variant}}\", t => t.{{method}}) instead.",
       useVariantMethodGeneric: "Avoid using .{{callee}}() with '{{className}}'. Use .{{variantMethod}}(\"{{variant}}\", t => t.addClass(\"{{baseClass}}\")) instead.",
     },
-    schema: [],
+    schema: [
+      {
+        type: "object" as const,
+        properties: {
+          ignoredClasses: {
+            type: "array" as const,
+            items: { type: "string" as const },
+            uniqueItems: true,
+            description: "Class names to ignore (e.g. custom CSS classes like 'bg-grid' that aren't Tailwind utilities)",
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
   },
 
   create(context: Rule.RuleContext): Rule.RuleListener {
+    const options = context.options[0] as { ignoredClasses?: string[] } | undefined;
+    const ignoredClasses = new Set(options?.ignoredClasses ?? []);
+
     function reportClassViolation(node: any, calleeName: string, className: string) {
+      if (ignoredClasses.has(className)) return;
       // Check for variant prefix (hover:, sm:, etc.)
       if (className.includes(":")) {
         const parsed = parseVariantPrefix(className);
@@ -593,6 +610,11 @@ const rule: Rule.RuleModule = {
           const remainingClasses: string[] = [];
 
           for (const className of classNames) {
+            // Ignored classes are never flagged or auto-fixed
+            if (ignoredClasses.has(className)) {
+              remainingClasses.push(className);
+              continue;
+            }
             // Variant classes (hover:, sm:, etc.) can't be auto-fixed — keep as remaining
             if (className.includes(":")) {
               remainingClasses.push(className);
@@ -608,6 +630,7 @@ const rule: Rule.RuleModule = {
 
           // Report violations
           for (const className of classNames) {
+            if (ignoredClasses.has(className)) continue;
             // Variant classes — report with variant-aware message (no autofix)
             if (className.includes(":")) {
               const parsed = parseVariantPrefix(className);
