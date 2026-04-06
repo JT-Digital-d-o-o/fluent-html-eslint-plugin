@@ -68,6 +68,72 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
       output: `Div().grow("0")`,
       errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "flex-grow-0", method: "grow('0')" } }],
     },
+    // font-mono → .fontFamily("mono")
+    {
+      code: `Div().addClass("font-mono")`,
+      output: `Div().fontFamily("mono")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "font-mono", method: "fontFamily('mono')" } }],
+    },
+    // gradient from/via/to
+    {
+      code: `Div().addClass("from-coral")`,
+      output: `Div().from("coral")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "from-coral", method: "from()" } }],
+    },
+    // group marker
+    {
+      code: `Div().addClass("group")`,
+      output: `Div().group()`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "group", method: "group()" } }],
+    },
+    // shadow color (not shadow size)
+    {
+      code: `Div().addClass("shadow-coral/30")`,
+      output: `Div().shadowColor("coral/30")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "shadow-coral/30", method: "shadowColor()" } }],
+    },
+    // shadow-md still maps to .shadow("md") — exact match takes priority
+    {
+      code: `Div().addClass("shadow-md")`,
+      output: `Div().shadow("md")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "shadow-md", method: "shadow('md')" } }],
+    },
+    // backdrop-blur
+    {
+      code: `Div().addClass("backdrop-blur-sm")`,
+      output: `Div().backdropBlur("sm")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "backdrop-blur-sm", method: "backdropBlur()" } }],
+    },
+    // line-clamp
+    {
+      code: `Div().addClass("line-clamp-2")`,
+      output: `Div().lineClamp("2")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "line-clamp-2", method: "lineClamp()" } }],
+    },
+    // antialiased
+    {
+      code: `Div().addClass("antialiased")`,
+      output: `Div().antialiased()`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "antialiased", method: "antialiased()" } }],
+    },
+    // tabular-nums
+    {
+      code: `Div().addClass("tabular-nums")`,
+      output: `Div().tabularNums()`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "tabular-nums", method: "tabularNums()" } }],
+    },
+    // underline-offset
+    {
+      code: `Div().addClass("underline-offset-2")`,
+      output: `Div().underlineOffset("2")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "underline-offset-2", method: "underlineOffset()" } }],
+    },
+    // ease
+    {
+      code: `Div().addClass("ease-out")`,
+      output: `Div().ease("out")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "ease-out", method: "ease()" } }],
+    },
     // addClass with single base utility
     {
       code: `Div().addClass("mt-2")`,

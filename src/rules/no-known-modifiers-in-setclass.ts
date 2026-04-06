@@ -366,6 +366,47 @@ const FIXABLE_PATTERNS: FixablePattern[] = [
   { pattern: "border-r", methodName: "border", exactMatch: true, fixedValue: "r" },
   { pattern: "border-x", methodName: "border", exactMatch: true, fixedValue: "x" },
   { pattern: "border-y", methodName: "border", exactMatch: true, fixedValue: "y" },
+
+  // Font family
+  { pattern: "font-sans", methodName: "fontFamily", exactMatch: true, fixedValue: "sans" },
+  { pattern: "font-serif", methodName: "fontFamily", exactMatch: true, fixedValue: "serif" },
+  { pattern: "font-mono", methodName: "fontFamily", exactMatch: true, fixedValue: "mono" },
+
+  // Gradients
+  { pattern: "bg-gradient-", methodName: "gradientTo" },
+  { pattern: "from-", methodName: "from" },
+  { pattern: "via-", methodName: "via" },
+  { pattern: "to-", methodName: "to" },
+
+  // Group / Peer markers
+  { pattern: "group", methodName: "group", exactMatch: true },
+  { pattern: "peer", methodName: "peer", exactMatch: true },
+
+  // Shadow color (prefix — catches shadow-red-500, shadow-coral/30, etc.)
+  // Must come after shadow exact matches above
+  { pattern: "shadow-", methodName: "shadowColor" },
+
+  // Blur & Backdrop Blur
+  { pattern: "backdrop-blur-", methodName: "backdropBlur" },
+  { pattern: "backdrop-blur", methodName: "backdropBlur", exactMatch: true },
+  { pattern: "blur-", methodName: "blur" },
+  { pattern: "blur", methodName: "blur", exactMatch: true },
+
+  // Line clamp
+  { pattern: "line-clamp-", methodName: "lineClamp" },
+
+  // Typography extras
+  { pattern: "antialiased", methodName: "antialiased", exactMatch: true },
+  { pattern: "tabular-nums", methodName: "tabularNums", exactMatch: true },
+  { pattern: "underline-offset-", methodName: "underlineOffset" },
+  { pattern: "break-all", methodName: "breakAll", exactMatch: true },
+
+  // Timing function
+  { pattern: "ease-", methodName: "ease" },
+
+  // Resize
+  { pattern: "resize-", methodName: "resize" },
+  { pattern: "resize", methodName: "resize", exactMatch: true },
 ];
 
 // Map for display purposes (used in error messages)
