@@ -130,9 +130,13 @@ const FIXABLE_PATTERNS: FixablePattern[] = [
   { pattern: "flex-none", methodName: "flex", exactMatch: true, fixedValue: "none" },
   { pattern: "flex", methodName: "flex", exactMatch: true },
 
-  // Shrink & Grow
+  // Shrink & Grow (including legacy flex-shrink / flex-grow)
+  { pattern: "flex-shrink-0", methodName: "shrink", exactMatch: true, fixedValue: "0" },
+  { pattern: "flex-shrink", methodName: "shrink", exactMatch: true },
   { pattern: "shrink-0", methodName: "shrink", exactMatch: true, fixedValue: "0" },
   { pattern: "shrink", methodName: "shrink", exactMatch: true },
+  { pattern: "flex-grow-0", methodName: "grow", exactMatch: true, fixedValue: "0" },
+  { pattern: "flex-grow", methodName: "grow", exactMatch: true },
   { pattern: "grow-0", methodName: "grow", exactMatch: true, fixedValue: "0" },
   { pattern: "grow", methodName: "grow", exactMatch: true },
 
@@ -415,16 +419,13 @@ function matchClass(className: string): MatchResult | null {
 }
 
 function checkClassForKnownModifiers(className: string): Array<{ className: string; method: string }> {
-  const violations: Array<{ className: string; method: string }> = [];
-
-  for (const [prefix, method] of Object.entries(MODIFIER_MAP)) {
-    if (className === prefix.replace(/-$/, "") || className === prefix || className.startsWith(prefix)) {
-      violations.push({ className, method });
-      break; // Only report first match
-    }
+  const match = matchClass(className);
+  if (match) {
+    const method = MODIFIER_MAP[match.pattern.pattern]
+      || `${match.pattern.methodName}()`;
+    return [{ className, method }];
   }
-
-  return violations;
+  return [];
 }
 
 // Variant prefixes that map to .on() (pseudo-classes/states)

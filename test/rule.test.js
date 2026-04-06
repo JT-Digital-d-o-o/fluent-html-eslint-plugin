@@ -56,6 +56,18 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
       output: `Div().background("red-500").addClass("bg-grid")`,
       errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "bg-red-500", method: "background()" } }],
     },
+    // flex-shrink-0 should suggest shrink("0"), not flex()
+    {
+      code: `Div().addClass("flex-shrink-0")`,
+      output: `Div().shrink("0")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "flex-shrink-0", method: "shrink('0')" } }],
+    },
+    // flex-grow-0 should suggest grow("0"), not flex()
+    {
+      code: `Div().addClass("flex-grow-0")`,
+      output: `Div().grow("0")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "flex-grow-0", method: "grow('0')" } }],
+    },
     // addClass with single base utility
     {
       code: `Div().addClass("mt-2")`,
