@@ -16,6 +16,7 @@ import noSuperfluousViewReturnType = require("./rules/no-superfluous-view-return
 import anchorRequiresCursorPointer = require("./rules/anchor-requires-cursor-pointer");
 import preferUnitOverload = require("./rules/prefer-unit-overload");
 import preferHtmxApi = require("./rules/prefer-htmx-api");
+import preferFormFor = require("./rules/prefer-form-for");
 
 const plugin = {
   rules: {
@@ -37,6 +38,7 @@ const plugin = {
     "anchor-requires-cursor-pointer": anchorRequiresCursorPointer,
     "prefer-unit-overload": preferUnitOverload,
     "prefer-htmx-api": preferHtmxApi,
+    "prefer-form-for": preferFormFor,
   },
   configs: {
     recommended: {
@@ -60,6 +62,7 @@ const plugin = {
         "fluent-html/anchor-requires-cursor-pointer": "warn",
         "fluent-html/prefer-unit-overload": "warn",
         "fluent-html/prefer-htmx-api": "warn",
+        "fluent-html/prefer-form-for": "warn",
       },
     },
   },

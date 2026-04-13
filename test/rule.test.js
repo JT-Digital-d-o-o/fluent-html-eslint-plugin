@@ -958,6 +958,60 @@ runSuite("prefer-htmx-api", preferHtmxApi, {
 });
 
 // ------------------------------------
+// prefer-form-for
+// ------------------------------------
+
+const preferFormFor = require("../dist/rules/prefer-form-for");
+
+runSuite("prefer-form-for", preferFormFor, {
+  valid: [
+    // formFor usage — correct
+    { code: `const f = formFor(); f.input("email", "email")` },
+    // Variable name — can't lint
+    { code: `Input().setName(fieldName)` },
+    // Template literal — can't lint
+    { code: "Input().setName(`field_${i}`)" },
+    // Button.setName — not a form field in the schema sense
+    { code: `Button("Submit").setName("action")` },
+    // Fieldset.setName — not a form field
+    { code: `Fieldset().setName("group")` },
+    // Output.setName — not a form field
+    { code: `Output().setName("result")` },
+    // Non-element function
+    { code: `foo().setName("email")` },
+    // No argument
+    { code: `Input().setName()` },
+  ],
+  invalid: [
+    // Input with literal setName
+    {
+      code: `Input("text").setName("email")`,
+      errors: [{ messageId: "preferFormFor", data: { name: "email", element: "Input" } }],
+    },
+    // Input without type
+    {
+      code: `Input().setName("username")`,
+      errors: [{ messageId: "preferFormFor", data: { name: "username", element: "Input" } }],
+    },
+    // Textarea with literal setName
+    {
+      code: `Textarea().setName("message")`,
+      errors: [{ messageId: "preferFormFor", data: { name: "message", element: "Textarea" } }],
+    },
+    // Select with literal setName
+    {
+      code: `Select(Option("A")).setName("role")`,
+      errors: [{ messageId: "preferFormFor", data: { name: "role", element: "Select" } }],
+    },
+    // Deep chain — still detects root element
+    {
+      code: `Input("email").setPlaceholder("you@example.com").setName("email").toggle("required")`,
+      errors: [{ messageId: "preferFormFor", data: { name: "email", element: "Input" } }],
+    },
+  ],
+});
+
+// ------------------------------------
 // Summary
 // ------------------------------------
 
