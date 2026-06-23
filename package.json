@@ -13,9 +13,10 @@
     "USAGE.md"
   ],
   "scripts": {
+    "gen:vocab": "node scripts/gen-vocab.mjs",
     "build": "tsc",
     "prepare": "npm run build",
-    "test": "node test/rule.test.js",
+    "test": "node test/rule.test.js && node test/vocab-drift.mjs",
     "prepublishOnly": "npm run build"
   },
   "repository": {

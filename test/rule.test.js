@@ -9,6 +9,8 @@ const noInnerHtmlSwap = require("../dist/rules/no-innerhtml-swap");
 const preferSetMethod = require("../dist/rules/prefer-set-method");
 const noRawIds = require("../dist/rules/no-raw-ids");
 const noTernaryInViewBuilder = require("../dist/rules/no-ternary-in-view-builder");
+const noConflictingClassesInSetclass = require("../dist/rules/no-conflicting-classes-in-setclass");
+const noRemovedV4Utilities = require("../dist/rules/no-removed-v4-utilities");
 
 const tester = new RuleTester({ parserOptions: { ecmaVersion: 2020, sourceType: "module" } });
 
@@ -1007,6 +1009,78 @@ runSuite("prefer-form-for", preferFormFor, {
     {
       code: `Input("email").setPlaceholder("you@example.com").setName("email").toggle("required")`,
       errors: [{ messageId: "preferFormFor", data: { name: "email", element: "Input" } }],
+    },
+  ],
+});
+
+// ------------------------------------
+// no-removed-v4-utilities (C-04)
+// ------------------------------------
+
+runSuite("no-removed-v4-utilities", noRemovedV4Utilities, {
+  valid: [
+    // v4 slash opacity modifier — the correct form
+    { code: `Div().setClass("bg-black/50")` },
+    { code: `Div().addClass("text-white/75")` },
+    // backdrop-opacity is a real v4 filter (NOT removed)
+    { code: `Div().setClass("backdrop-opacity-50")` },
+    // non-opacity utilities
+    { code: `Div().setClass("bg-red-500 p-4 opacity-50")` },
+    // method-call colors are untouched (rule only scans setClass/addClass strings)
+    { code: `Div().background("black/50")` },
+  ],
+  invalid: [
+    {
+      code: `Div().setClass("bg-opacity-50")`,
+      errors: [{ messageId: "removedOpacity", data: { cls: "bg-opacity-50", util: "bg", amount: "50" } }],
+    },
+    {
+      code: `Div().addClass("text-opacity-75")`,
+      errors: [{ messageId: "removedOpacity", data: { cls: "text-opacity-75", util: "text", amount: "75" } }],
+    },
+    // mixed with valid classes — only the removed one flags
+    {
+      code: `Div().setClass("flex bg-opacity-50 p-4")`,
+      errors: [{ messageId: "removedOpacity", data: { cls: "bg-opacity-50", util: "bg", amount: "50" } }],
+    },
+    // variant-prefixed
+    {
+      code: `Div().setClass("hover:border-opacity-30")`,
+      errors: [{ messageId: "removedOpacity", data: { cls: "border-opacity-30", util: "border", amount: "30" } }],
+    },
+    // ring/divide/placeholder families
+    {
+      code: `Div().addClass("ring-opacity-40")`,
+      errors: [{ messageId: "removedOpacity", data: { cls: "ring-opacity-40", util: "ring", amount: "40" } }],
+    },
+  ],
+});
+
+// ------------------------------------
+// no-conflicting-classes-in-setclass — v4 gradient family (C-04)
+// ------------------------------------
+
+runSuite("no-conflicting-classes (gradient family)", noConflictingClassesInSetclass, {
+  valid: [
+    // one gradient type + non-conflicting stops
+    { code: `Div().setClass("bg-linear-to-r from-red-500 to-blue-500")` },
+    { code: `Div().setClass("bg-radial from-white to-black")` },
+  ],
+  invalid: [
+    // mixing gradient TYPES (v4)
+    {
+      code: `Div().setClass("bg-linear-to-r bg-radial")`,
+      errors: [{ messageId: "conflictingClasses", data: { first: "bg-linear-to-r", second: "bg-radial" } }],
+    },
+    // v3→v4 migration artifact (bg-gradient- + bg-linear-)
+    {
+      code: `Div().setClass("bg-gradient-to-r bg-linear-to-l")`,
+      errors: [{ messageId: "conflictingClasses", data: { first: "bg-gradient-to-r", second: "bg-linear-to-l" } }],
+    },
+    // two linear directions
+    {
+      code: `Div().setClass("bg-linear-to-r bg-linear-to-l")`,
+      errors: [{ messageId: "conflictingClasses", data: { first: "bg-linear-to-r", second: "bg-linear-to-l" } }],
     },
   ],
 });

@@ -17,6 +17,7 @@ import anchorRequiresCursorPointer = require("./rules/anchor-requires-cursor-poi
 import preferUnitOverload = require("./rules/prefer-unit-overload");
 import preferHtmxApi = require("./rules/prefer-htmx-api");
 import preferFormFor = require("./rules/prefer-form-for");
+import noRemovedV4Utilities = require("./rules/no-removed-v4-utilities");
 
 const plugin = {
   rules: {
@@ -39,6 +40,7 @@ const plugin = {
     "prefer-unit-overload": preferUnitOverload,
     "prefer-htmx-api": preferHtmxApi,
     "prefer-form-for": preferFormFor,
+    "no-removed-v4-utilities": noRemovedV4Utilities,
   },
   configs: {
     recommended: {
@@ -63,6 +65,7 @@ const plugin = {
         "fluent-html/prefer-unit-overload": "warn",
         "fluent-html/prefer-htmx-api": "warn",
         "fluent-html/prefer-form-for": "warn",
+        "fluent-html/no-removed-v4-utilities": "error",
       },
     },
   },

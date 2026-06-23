@@ -340,6 +340,7 @@ const FIXABLE_PATTERNS: FixablePattern[] = [
   { pattern: "sr-only", methodName: "srOnly", exactMatch: true },
 
   // Outline
+  { pattern: "outline-hidden", methodName: "outlineHidden", exactMatch: true },
   { pattern: "outline-", methodName: "outline" },
 
   // Text style shortcuts
@@ -367,12 +368,21 @@ const FIXABLE_PATTERNS: FixablePattern[] = [
   { pattern: "border-x", methodName: "border", exactMatch: true, fixedValue: "x" },
   { pattern: "border-y", methodName: "border", exactMatch: true, fixedValue: "y" },
 
+  // Border color catch-all for custom theme colors (e.g. border-coral, border-coral/30)
+  // Must come after all exact border matches (width, style, direction) to avoid false matches
+  { pattern: "border-", methodName: "borderColor" },
+
+  // Ring color catch-all for custom theme colors (e.g. ring-coral/20)
+  // Must come after all exact ring matches (width) and specific ring color prefixes
+  { pattern: "ring-", methodName: "ringColor" },
+
   // Font family
   { pattern: "font-sans", methodName: "fontFamily", exactMatch: true, fixedValue: "sans" },
   { pattern: "font-serif", methodName: "fontFamily", exactMatch: true, fixedValue: "serif" },
   { pattern: "font-mono", methodName: "fontFamily", exactMatch: true, fixedValue: "mono" },
 
-  // Gradients
+  // Gradients (v4 bg-linear-* + legacy v3 bg-gradient-*)
+  { pattern: "bg-linear-", methodName: "gradientTo" },
   { pattern: "bg-gradient-", methodName: "gradientTo" },
   { pattern: "from-", methodName: "from" },
   { pattern: "via-", methodName: "via" },

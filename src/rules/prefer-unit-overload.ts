@@ -1,14 +1,7 @@
 import { Rule } from "eslint";
-
-/**
- * Methods that support unit-based arbitrary value overloads,
- * mapped to their Tailwind class prefix for generating the fix.
- */
-const UNIT_METHODS = new Set([
-  "w", "h", "minW", "maxW", "minH", "maxH",
-  "padding", "margin", "gap",
-  "top", "right", "bottom", "left", "inset",
-]);
+// Unit-overload methods are derived from fluent-html/class-vocab (C-05) — the
+// rows whose emit shape carries a unit overload. See scripts/gen-vocab.mjs.
+import { UNIT_METHODS } from "../vocab.generated";
 
 /**
  * Regex that matches bracket-syntax arbitrary values containing a CSS unit.

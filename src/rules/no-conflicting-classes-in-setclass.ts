@@ -139,9 +139,19 @@ const PREFIX_CONFLICTS: string[] = [
   "outline-",
 ];
 
+// v4 gradient TYPE family — only one of bg-gradient-*/bg-linear-*/bg-radial-*/
+// bg-conic-* takes effect, and v3→v4 migrations may mix bg-gradient- with
+// bg-linear-. All four (variable directions included) collapse to one group.
+const GRADIENT_TYPE_RE = /^bg-(?:gradient|linear|radial|conic)(?:-|$)/;
+
 function getConflictGroup(className: string): string | null {
   // Strip responsive/state prefixes (e.g., sm:, hover:, dark:)
   const baseClass = className.replace(/^(sm:|md:|lg:|xl:|2xl:|hover:|focus:|active:|disabled:|dark:|group-hover:|peer-)+/, "");
+
+  // v4 gradient type family (prefix-agnostic — catches cross-family conflicts)
+  if (GRADIENT_TYPE_RE.test(baseClass)) {
+    return "gradient-type-family";
+  }
 
   // Check exact match groups
   for (const group of CONFLICT_GROUPS) {
