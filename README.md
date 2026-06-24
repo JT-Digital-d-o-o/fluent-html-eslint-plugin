@@ -113,6 +113,35 @@ module.exports = {
 };
 ```
 
+## Rules
+
+All rules are included in the `recommended` preset at the severity shown. 🔧 = auto-fixable.
+
+| Rule | Recommended | What it does |
+|------|:-----------:|--------------|
+| `no-known-modifiers-in-setclass` 🔧 | warn | `.setClass()`/`.addClass()` with a Tailwind class that has a dedicated fluent method |
+| `no-unnecessary-spaces-in-setclass` 🔧 | warn | Extra whitespace in a class string |
+| `no-duplicate-classes-in-setclass` 🔧 | warn | A class repeated in the same `.setClass()` |
+| `no-conflicting-classes-in-setclass` | warn | Mutually-exclusive classes in one `.setClass()` (incl. v4 gradient families) |
+| `no-empty-setclass` 🔧 | warn | `.setClass("")` / no-op class calls |
+| `no-multiple-setclass-in-chain` | error | More than one `.setClass()` in a chain (the later clobbers the earlier) |
+| `no-setclass-after-fluent-modifier` | error | `.setClass()` after a fluent modifier (`.padding()`, `.on()`, …) silently drops it |
+| `no-setclass-in-when-apply-callback` | error | `.setClass()` inside a `.when()`/`.apply()` callback |
+| `prefer-variadic-children` 🔧 | warn | Pass children variadically, not as an array (`Div(a, b)`, not `Div([a, b])`) |
+| `no-conditional-in-setclass` | warn | Ternaries/conditionals embedded in a class string |
+| `no-innerhtml-swap` 🔧 | error | `innerHTML`/`outerHTML` swaps — prefer `outerMorph` |
+| `prefer-set-method` 🔧 | warn | `addAttribute("type", …)` → `.setType(…)`; flags `aria-*`/`data-*`/`style`/`role`/`title`/`tabindex` |
+| `prefer-toggle` 🔧 | warn | **(v6)** boolean `addAttribute("disabled", …)` → `.toggle("disabled")` |
+| `no-raw-ids` | warn | Hardcoded id strings — use `defineIds`/`createId` |
+| `no-ternary-in-view-builder` | warn | Ternaries in view builders — prefer `IfThenElse`/`Match` |
+| `no-superfluous-view-return-type` 🔧 | warn | Redundant `: View` return annotations |
+| `anchor-requires-cursor-pointer` 🔧 | warn | `A().setHtmx(...)` needs `.cursor("pointer")` |
+| `prefer-unit-overload` 🔧 | warn | `.w("[180px]")` → `.w("px", 180)` |
+| `prefer-htmx-api` | warn | Raw `hx-*` attributes → the typed HTMX API |
+| `prefer-form-for` | warn | Untyped form fields → the typed `Form<T>` binding |
+| `no-removed-v4-utilities` | error | **(v6)** Tailwind v3 utilities removed in v4 (`*-opacity-*`, `bg-gradient-*`, …) |
+| `no-raw-icon-string` | warn | **(v6)** `Raw("<svg…>")` icon injection → the typed SVG builders |
+
 ## Rule: `no-known-modifiers-in-setclass`
 
 Warns when `.setClass()` is called with Tailwind classes that have dedicated fluent-styling methods. **This rule is auto-fixable.**
@@ -139,7 +168,7 @@ The rule checks for these Tailwind class patterns and suggests alternatives:
 | `border`, `border-*` | `.border()`, `.borderColor()` |
 | `rounded`, `rounded-*` | `.rounded()` |
 | `shadow`, `shadow-*` | `.shadow()` |
-| `relative`, `absolute`, `fixed`, etc. | `.position()` |
+| `relative`, `absolute`, `fixed`, etc. | `.relative()`, `.absolute()`, `.fixed()` |
 | `z-*`, `opacity-*`, `cursor-*` | `.zIndex()`, `.opacity()`, `.cursor()` |
 | `overflow-*` | `.overflow()` |
 

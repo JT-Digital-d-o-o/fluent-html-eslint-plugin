@@ -1043,8 +1043,8 @@ const preferFormFor = require("../dist/rules/prefer-form-for");
 
 runSuite("prefer-form-for", preferFormFor, {
   valid: [
-    // formFor usage — correct
-    { code: `const f = formFor(); f.input("email", "email")` },
+    // Form<T> binding usage — correct (no raw .setName on a field element)
+    { code: `Form((f) => f.input("email", "email"))` },
     // Variable name — can't lint
     { code: `Input().setName(fieldName)` },
     // Template literal — can't lint

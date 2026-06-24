@@ -2,7 +2,7 @@ import { Rule } from "eslint";
 
 /**
  * Form element factory functions whose `.setName()` should be replaced
- * by the type-safe `formFor<T>()` pattern.
+ * by the type-safe `Form<T>(f => f.input(...))` binding.
  */
 const FORM_FIELD_FUNCTIONS = new Set(["Input", "Textarea", "Select"]);
 
@@ -27,13 +27,13 @@ const rule: Rule.RuleModule = {
     type: "suggestion",
     docs: {
       description:
-        'Prefer formFor<T>() over .setName("literal") on form field elements for compile-time field name safety.',
+        'Prefer the typed Form<T> binding over .setName("literal") on form field elements for compile-time field name safety.',
       category: "Best Practices",
       recommended: true,
     },
     messages: {
       preferFormFor:
-        'Avoid .setName("{{name}}") on {{element}}(). Use formFor<SchemaType>() for type-safe field names that catch typos at compile time.',
+        'Avoid .setName("{{name}}") on {{element}}(). Use the Form<SchemaType>(f => …) binding for type-safe field names that catch typos at compile time.',
     },
     schema: [],
   },
