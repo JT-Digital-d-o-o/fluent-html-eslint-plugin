@@ -18,6 +18,9 @@ const ATTRIBUTE_TO_METHOD: Record<string, string> = {
   target: "setTarget",
   rel: "setRel",
   for: "setFor",
+  // Global / accessibility (1:1 string setters)
+  role: "setRole",
+  title: "setTitle",
   // Form attributes
   min: "setMin",
   max: "setMax",
@@ -113,11 +116,24 @@ const rule: Rule.RuleModule = {
     messages: {
       preferSetMethod:
         'Use .{{method}}({{value}}) instead of .addAttribute("{{attr}}", {{value}}). Dedicated methods provide type safety and autocomplete.',
+      preferTypedSetter:
+        'Use .{{suggestion}} instead of .addAttribute("{{attr}}", …). Typed setters give autocomplete and validation (e.g. aria typos become compile errors).',
     },
     schema: [],
   },
 
   create(context: Rule.RuleContext): Rule.RuleListener {
+    // Object-arg / specially-typed setters — reported but NOT auto-fixed, because
+    // the transform isn't a safe verbatim text swap (object literal, or a number-typed
+    // value that would no longer be a quoted string).
+    function typedSetterSuggestion(attr: string): string | null {
+      if (attr.startsWith("aria-")) return `setAria({ ${attr.slice(5)}: … })`;
+      if (attr.startsWith("data-")) return "setDataAttrs({ … })";
+      if (attr === "style") return "setStyle(…) / setStyles({ … })";
+      if (attr === "tabindex") return "setTabindex(n)";
+      return null;
+    }
+
     return {
       CallExpression(node: any) {
         if (node.callee.type !== "MemberExpression") return;
@@ -127,37 +143,44 @@ const rule: Rule.RuleModule = {
         )
           return;
 
-        if (node.arguments.length < 2) return;
+        if (node.arguments.length < 1) return;
         const attrArg = node.arguments[0];
-        const valueArg = node.arguments[1];
 
         // Only check string literal attribute names
         if (attrArg.type !== "Literal" || typeof attrArg.value !== "string") return;
 
         const attrName = attrArg.value;
+
+        // 1. Dedicated 1:1 string setter — auto-fixable (value passed through verbatim).
         const method = ATTRIBUTE_TO_METHOD[attrName];
-        if (!method) return;
+        if (method) {
+          if (node.arguments.length < 2) return;
+          const valueArg = node.arguments[1];
+          const valueText = context.sourceCode.getText(valueArg);
+          context.report({
+            node,
+            messageId: "preferSetMethod",
+            data: { method, attr: attrName, value: valueText },
+            fix(fixer) {
+              const dotStart = node.callee.property.range[0] - 1; // -1 for the dot
+              return fixer.replaceTextRange(
+                [dotStart, node.range[1]],
+                `.${method}(${valueText})`
+              );
+            },
+          });
+          return;
+        }
 
-        const sourceCode = context.sourceCode;
-        const valueText = sourceCode.getText(valueArg);
-
-        context.report({
-          node,
-          messageId: "preferSetMethod",
-          data: {
-            method,
-            attr: attrName,
-            value: valueText,
-          },
-          fix(fixer) {
-            // Replace .addAttribute("attr", value) with .setMethod(value)
-            const dotStart = node.callee.property.range[0] - 1; // -1 for the dot
-            return fixer.replaceTextRange(
-              [dotStart, node.range[1]],
-              `.${method}(${valueText})`
-            );
-          },
-        });
+        // 2. Object-arg / specially-typed setter (aria-*/data-*/style/tabindex) — report only.
+        const suggestion = typedSetterSuggestion(attrName);
+        if (suggestion) {
+          context.report({
+            node,
+            messageId: "preferTypedSetter",
+            data: { attr: attrName, suggestion },
+          });
+        }
       },
     };
   },

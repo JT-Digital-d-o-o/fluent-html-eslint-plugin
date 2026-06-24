@@ -482,8 +482,8 @@ runSuite("prefer-set-method", preferSetMethod, {
     { code: `Input().setPlaceholder("Name")` },
     { code: `Img().setSrc("photo.jpg")` },
     // addAttribute for non-standard/custom attrs — fine
-    { code: `Div().addAttribute("data-id", "123")` },
     { code: `Div().addAttribute("x-on:click", "open = true")` },
+    { code: `Div().addAttribute("hx-foo", "bar")` },
     // boolean attributes are NOT handled here (no dedicated setters in v6) — see prefer-toggle
     { code: `Button().addAttribute("disabled", "")` },
     { code: `Input().addAttribute("checked", "checked")` },
@@ -494,6 +494,38 @@ runSuite("prefer-set-method", preferSetMethod, {
       code: `Button().addAttribute("type", "submit")`,
       output: `Button().setType("submit")`,
       errors: [{ messageId: "preferSetMethod" }],
+    },
+    // role / title — 1:1 string setters (auto-fixable)
+    {
+      code: `Div("Alert").addAttribute("role", "alert")`,
+      output: `Div("Alert").setRole("alert")`,
+      errors: [{ messageId: "preferSetMethod" }],
+    },
+    {
+      code: `Button("?").addAttribute("title", "Help")`,
+      output: `Button("?").setTitle("Help")`,
+      errors: [{ messageId: "preferSetMethod" }],
+    },
+    // aria-* / data-* / style / tabindex — typed setters, report only (no auto-fix)
+    {
+      code: `Button("Menu").addAttribute("aria-label", "Open")`,
+      output: `Button("Menu").addAttribute("aria-label", "Open")`,
+      errors: [{ messageId: "preferTypedSetter" }],
+    },
+    {
+      code: `Div().addAttribute("data-id", "123")`,
+      output: `Div().addAttribute("data-id", "123")`,
+      errors: [{ messageId: "preferTypedSetter" }],
+    },
+    {
+      code: `Div().addAttribute("style", "color: red")`,
+      output: `Div().addAttribute("style", "color: red")`,
+      errors: [{ messageId: "preferTypedSetter" }],
+    },
+    {
+      code: `Div().addAttribute("tabindex", "0")`,
+      output: `Div().addAttribute("tabindex", "0")`,
+      errors: [{ messageId: "preferTypedSetter" }],
     },
     // placeholder
     {
