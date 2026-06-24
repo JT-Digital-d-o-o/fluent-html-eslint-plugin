@@ -1,0 +1,24 @@
+# Changelog
+
+All notable changes to `eslint-plugin-fluent-html` are documented here.
+
+## [1.7.0] - fluent-html v6
+
+Aligns the plugin with the fluent-html v6 (greenfield) API surface.
+
+### Added
+
+- **`prefer-toggle`** (recommended: warn, 🔧) — boolean `addAttribute("disabled", …)` → `.toggle("disabled")`. Boolean attributes have no named setters in v6; they render bare via `.toggle()`.
+- **`no-removed-v4-utilities`** (recommended: error) — flags Tailwind v3 utilities removed in v4: the `*-opacity-*` family (use the slash modifier) and cross-family gradient conflicts (`bg-gradient-*`/`bg-linear-*`/`bg-radial`/`bg-conic`).
+- **`no-raw-icon-string`** (recommended: warn) — flags `Raw("<svg…>")` icon injection; use the typed SVG element builders (`Svg`/`Path`/`Circle`/`LinearGradient`/…).
+- A complete **Rules** table in the README (all 22 rules, severities, accurate auto-fix markers).
+
+### Changed
+
+- **`prefer-set-method`** — dropped the removed boolean setters from its map; now also flags `addAttribute("aria-*"/"data-*"/"style"/"role"/"title"/"tabindex")`, and maps `crossorigin`→`setCrossOrigin` / `referrerpolicy`→`setReferrerPolicy` (+ `hreflang`/`inputmode`/`http-equiv`).
+- **`prefer-form-for`** — its suggestion text now points to the `Form<T>` binding instead of the removed `formFor()` (the rule id is unchanged).
+- The generated class vocabulary tracks the v6 method set (134 methods), including the position/display shortcuts, `flexShorthand`, and `htmxIndicator`.
+
+### Fixed
+
+- README: the `no-known-modifiers-in-setclass` pattern table suggested the removed `.position()`; now `.absolute()`/`.relative()`/`.fixed()`.
