@@ -10,6 +10,7 @@ import preferVariadicChildren = require("./rules/prefer-variadic-children");
 import noConditionalInSetclass = require("./rules/no-conditional-in-setclass");
 import noInnerHtmlSwap = require("./rules/no-innerhtml-swap");
 import preferSetMethod = require("./rules/prefer-set-method");
+import preferToggle = require("./rules/prefer-toggle");
 import noRawIds = require("./rules/no-raw-ids");
 import noTernaryInViewBuilder = require("./rules/no-ternary-in-view-builder");
 import noSuperfluousViewReturnType = require("./rules/no-superfluous-view-return-type");
@@ -33,6 +34,7 @@ const plugin = {
     "no-conditional-in-setclass": noConditionalInSetclass,
     "no-innerhtml-swap": noInnerHtmlSwap,
     "prefer-set-method": preferSetMethod,
+    "prefer-toggle": preferToggle,
     "no-raw-ids": noRawIds,
     "no-ternary-in-view-builder": noTernaryInViewBuilder,
     "no-superfluous-view-return-type": noSuperfluousViewReturnType,
@@ -58,6 +60,7 @@ const plugin = {
         "fluent-html/no-conditional-in-setclass": "warn",
         "fluent-html/no-innerhtml-swap": "error",
         "fluent-html/prefer-set-method": "warn",
+        "fluent-html/prefer-toggle": "warn",
         "fluent-html/no-raw-ids": "warn",
         "fluent-html/no-ternary-in-view-builder": "warn",
         "fluent-html/no-superfluous-view-return-type": "warn",

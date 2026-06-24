@@ -84,15 +84,10 @@ const ATTRIBUTE_TO_METHOD: Record<string, string> = {
   rowspan: "setRowspan",
   scope: "setScope",
   span: "setSpan",
-  // Boolean attributes with dedicated setters
-  disabled: "setDisabled",
-  readonly: "setReadonly",
-  checked: "setChecked",
-  autofocus: "setAutofocus",
-  multiple: "setMultiple",
-  novalidate: "setNovalidate",
-  selected: "setSelected",
-  open: "setOpen",
+  // NOTE: boolean attributes (disabled/checked/readonly/multiple/selected/open/…) have
+  // NO dedicated setters in v6 — they are set via `.toggle("name")`. The `prefer-toggle`
+  // rule handles `addAttribute(<bool>, …)`; keeping them out of this map avoids suggesting
+  // removed setters.
   // Button attributes
   formaction: "setFormaction",
   formmethod: "setFormmethod",

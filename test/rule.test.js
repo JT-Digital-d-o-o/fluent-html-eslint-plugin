@@ -7,6 +7,7 @@ const preferVariadicChildren = require("../dist/rules/prefer-variadic-children")
 const noConditionalInSetclass = require("../dist/rules/no-conditional-in-setclass");
 const noInnerHtmlSwap = require("../dist/rules/no-innerhtml-swap");
 const preferSetMethod = require("../dist/rules/prefer-set-method");
+const preferToggle = require("../dist/rules/prefer-toggle");
 const noRawIds = require("../dist/rules/no-raw-ids");
 const noTernaryInViewBuilder = require("../dist/rules/no-ternary-in-view-builder");
 const noConflictingClassesInSetclass = require("../dist/rules/no-conflicting-classes-in-setclass");
@@ -483,6 +484,9 @@ runSuite("prefer-set-method", preferSetMethod, {
     // addAttribute for non-standard/custom attrs — fine
     { code: `Div().addAttribute("data-id", "123")` },
     { code: `Div().addAttribute("x-on:click", "open = true")` },
+    // boolean attributes are NOT handled here (no dedicated setters in v6) — see prefer-toggle
+    { code: `Button().addAttribute("disabled", "")` },
+    { code: `Input().addAttribute("checked", "checked")` },
   ],
   invalid: [
     // type
@@ -514,6 +518,45 @@ runSuite("prefer-set-method", preferSetMethod, {
       code: `Input().addAttribute("name", "email")`,
       output: `Input().setName("email")`,
       errors: [{ messageId: "preferSetMethod" }],
+    },
+  ],
+});
+
+// ------------------------------------
+// prefer-toggle
+// ------------------------------------
+
+runSuite("prefer-toggle", preferToggle, {
+  valid: [
+    // Already using .toggle — correct
+    { code: `Input().toggle("checked")` },
+    { code: `Button("Save").toggle("disabled", isLoading)` },
+    // addAttribute for a non-boolean attr — prefer-set-method's job, not this rule
+    { code: `Input().addAttribute("type", "checkbox")` },
+    { code: `Div().addAttribute("data-open", "true")` },
+  ],
+  invalid: [
+    // static literal value → auto-fix to bare .toggle()
+    {
+      code: `Button().addAttribute("disabled", "")`,
+      output: `Button().toggle("disabled")`,
+      errors: [{ messageId: "preferToggle" }],
+    },
+    {
+      code: `Input().addAttribute("checked", "checked")`,
+      output: `Input().toggle("checked")`,
+      errors: [{ messageId: "preferToggle" }],
+    },
+    {
+      code: `Option("A").addAttribute("selected", "true")`,
+      output: `Option("A").toggle("selected")`,
+      errors: [{ messageId: "preferToggle" }],
+    },
+    // dynamic value → report WITHOUT auto-fix (author must move the condition into the 2nd arg)
+    {
+      code: `Input().addAttribute("disabled", isDisabled ? "disabled" : "")`,
+      output: `Input().addAttribute("disabled", isDisabled ? "disabled" : "")`,
+      errors: [{ messageId: "preferToggle" }],
     },
   ],
 });
