@@ -12,6 +12,7 @@ const noRawIds = require("../dist/rules/no-raw-ids");
 const noTernaryInViewBuilder = require("../dist/rules/no-ternary-in-view-builder");
 const noConflictingClassesInSetclass = require("../dist/rules/no-conflicting-classes-in-setclass");
 const noRemovedV4Utilities = require("../dist/rules/no-removed-v4-utilities");
+const noRawIconString = require("../dist/rules/no-raw-icon-string");
 
 const tester = new RuleTester({ parserOptions: { ecmaVersion: 2020, sourceType: "module" } });
 
@@ -1156,6 +1157,30 @@ runSuite("no-conflicting-classes (gradient family)", noConflictingClassesInSetcl
     {
       code: `Div().setClass("bg-linear-to-r bg-linear-to-l")`,
       errors: [{ messageId: "conflictingClasses", data: { first: "bg-linear-to-r", second: "bg-linear-to-l" } }],
+    },
+  ],
+});
+
+// ------------------------------------
+// no-raw-icon-string
+// ------------------------------------
+
+runSuite("no-raw-icon-string", noRawIconString, {
+  valid: [
+    // typed SVG builders — correct
+    { code: `Svg(Path().setD("M0 0 L24 24"))` },
+    // Raw() of non-SVG content is fine
+    { code: `Raw("<strong>bold</strong>")` },
+    { code: `Raw(htmlFromTrustedSource)` },
+  ],
+  invalid: [
+    {
+      code: `Raw("<svg viewBox='0 0 24 24'><path d='M0 0'/></svg>")`,
+      errors: [{ messageId: "noRawIcon" }],
+    },
+    {
+      code: "Raw(`<svg>${inner}</svg>`)",
+      errors: [{ messageId: "noRawIcon" }],
     },
   ],
 });

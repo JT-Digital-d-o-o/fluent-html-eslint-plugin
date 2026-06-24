@@ -19,6 +19,7 @@ import preferUnitOverload = require("./rules/prefer-unit-overload");
 import preferHtmxApi = require("./rules/prefer-htmx-api");
 import preferFormFor = require("./rules/prefer-form-for");
 import noRemovedV4Utilities = require("./rules/no-removed-v4-utilities");
+import noRawIconString = require("./rules/no-raw-icon-string");
 
 const plugin = {
   rules: {
@@ -43,6 +44,7 @@ const plugin = {
     "prefer-htmx-api": preferHtmxApi,
     "prefer-form-for": preferFormFor,
     "no-removed-v4-utilities": noRemovedV4Utilities,
+    "no-raw-icon-string": noRawIconString,
   },
   configs: {
     recommended: {
@@ -69,6 +71,7 @@ const plugin = {
         "fluent-html/prefer-htmx-api": "warn",
         "fluent-html/prefer-form-for": "warn",
         "fluent-html/no-removed-v4-utilities": "error",
+        "fluent-html/no-raw-icon-string": "warn",
       },
     },
   },
