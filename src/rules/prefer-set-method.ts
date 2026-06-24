@@ -40,9 +40,11 @@ const ATTRIBUTE_TO_METHOD: Record<string, string> = {
   loading: "setLoading",
   srcset: "setSrcset",
   sizes: "setSizes",
-  crossorigin: "setCrossorigin",
+  crossorigin: "setCrossOrigin",
   poster: "setPoster",
   preload: "setPreload",
+  inputmode: "setInputmode",
+  hreflang: "setHreflang",
   // Interactive
   download: "setDownload",
   // Embedded
@@ -82,6 +84,7 @@ const ATTRIBUTE_TO_METHOD: Record<string, string> = {
   charset: "setCharset",
   content: "setContent",
   property: "setProperty",
+  "http-equiv": "setHttpEquiv",
   // Table
   colspan: "setColspan",
   rowspan: "setRowspan",
@@ -95,7 +98,7 @@ const ATTRIBUTE_TO_METHOD: Record<string, string> = {
   formaction: "setFormaction",
   formmethod: "setFormmethod",
   // Link attributes
-  referrerpolicy: "setReferrerpolicy",
+  referrerpolicy: "setReferrerPolicy",
   // Area attributes
   shape: "setShape",
   coords: "setCoords",
