@@ -11,9 +11,9 @@ import { dirname, join } from "node:path";
 const here = dirname(fileURLToPath(import.meta.url));
 const out = join(here, "..", "src", "vocab.generated.ts");
 
-let classVocab;
+let classVocab, UNITS;
 try {
-  ({ classVocab } = await import("../../fluent-html/dist/src/class-vocab/index.js"));
+  ({ classVocab, UNITS } = await import("../../fluent-html/dist/src/class-vocab/index.js"));
 } catch (err) {
   console.warn(`[gen-vocab] fluent-html not found beside the plugin — keeping the committed src/vocab.generated.ts.\n  ${err.message}`);
   process.exit(0);
@@ -24,6 +24,7 @@ const unitMethods = classVocab
   .filter((d) => d.emit.kind === "sizing" || (d.emit.kind === "spacing" && d.emit.units))
   .map((d) => d.method)
   .sort();
+const units = [...UNITS].sort();
 
 const content = `// AUTO-GENERATED from fluent-html/class-vocab (C-05) by scripts/gen-vocab.mjs.
 // Do NOT edit by hand — run \`npm run gen:vocab\`. Pinned by test/vocab-drift.mjs.
@@ -34,6 +35,9 @@ export const VOCAB_METHODS: readonly string[] = ${JSON.stringify(methods)};
 
 /** Methods supporting the \`(unit, amount)\` arbitrary-value overload. */
 export const UNIT_METHODS: ReadonlySet<string> = new Set(${JSON.stringify(unitMethods)});
+
+/** Arbitrary-value CSS units accepted by the \`(unit, amount)\` overload (lib \`UNITS\`). */
+export const VOCAB_UNITS: readonly string[] = ${JSON.stringify(units)};
 
 /** Methods that append classes (a later \`setClass\` would clobber them) — vocab + variant/callback methods. */
 export const FLUENT_MODIFIERS: ReadonlySet<string> = new Set([
@@ -47,4 +51,4 @@ export const FLUENT_MODIFIERS: ReadonlySet<string> = new Set([
 `;
 
 writeFileSync(out, content);
-console.log(`[gen-vocab] wrote ${methods.length} methods, ${unitMethods.length} unit methods → src/vocab.generated.ts`);
+console.log(`[gen-vocab] wrote ${methods.length} methods, ${unitMethods.length} unit methods, ${units.length} units → src/vocab.generated.ts`);

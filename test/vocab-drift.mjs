@@ -12,13 +12,15 @@ try {
   process.exit(0);
 }
 
-const { VOCAB_METHODS, UNIT_METHODS } = await import("../dist/vocab.generated.js");
+const { UNITS } = await import("../../fluent-html/dist/src/class-vocab/index.js");
+const { VOCAB_METHODS, UNIT_METHODS, VOCAB_UNITS } = await import("../dist/vocab.generated.js");
 
 const expectedMethods = classVocab.map((d) => d.method).sort();
 const expectedUnits = classVocab
   .filter((d) => d.emit.kind === "sizing" || (d.emit.kind === "spacing" && d.emit.units))
   .map((d) => d.method)
   .sort();
+const expectedUnitTokens = [...UNITS].sort();
 
 assert.deepEqual(
   [...VOCAB_METHODS].sort(),
@@ -30,5 +32,10 @@ assert.deepEqual(
   expectedUnits,
   "UNIT_METHODS drifted from fluent-html/class-vocab — run `npm run gen:vocab`",
 );
+assert.deepEqual(
+  [...VOCAB_UNITS].sort(),
+  expectedUnitTokens,
+  "VOCAB_UNITS drifted from fluent-html UNITS — run `npm run gen:vocab`",
+);
 
-console.log(`[vocab-drift] ✓ ${expectedMethods.length} methods, ${expectedUnits.length} unit methods in sync with fluent-html/class-vocab`);
+console.log(`[vocab-drift] ✓ ${expectedMethods.length} methods, ${expectedUnits.length} unit methods, ${expectedUnitTokens.length} units in sync with fluent-html/class-vocab`);

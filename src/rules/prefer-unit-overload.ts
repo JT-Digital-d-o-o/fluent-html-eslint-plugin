@@ -1,14 +1,19 @@
 import { Rule } from "eslint";
-// Unit-overload methods are derived from fluent-html/class-vocab (C-05) — the
-// rows whose emit shape carries a unit overload. See scripts/gen-vocab.mjs.
-import { UNIT_METHODS } from "../vocab.generated";
+// Unit-overload methods AND the CSS unit list are derived from fluent-html/class-vocab
+// (C-05) — see scripts/gen-vocab.mjs; pinned by test/vocab-drift.mjs.
+import { UNIT_METHODS, VOCAB_UNITS } from "../vocab.generated";
+
+const escapeRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /**
  * Regex that matches bracket-syntax arbitrary values containing a CSS unit.
- * Captures: [1] = number (possibly decimal), [2] = unit
+ * The unit alternation is built from VOCAB_UNITS (single-sourced from the lib's
+ * `UNITS`, longest-first so a unit that is a suffix of another can't shadow it).
+ * Captures: [1] = number (possibly decimal), [2] = unit.
  * Examples: "[180px]" → ("180", "px"), "[1.5rem]" → ("1.5", "rem"), "[50%]" → ("50", "%")
  */
-const BRACKET_UNIT_RE = /^\[(-?\d+(?:\.\d+)?)(px|rem|em|%|vh|vw|dvh|svh|lvh)\]$/;
+const UNIT_ALT = [...VOCAB_UNITS].sort((a, b) => b.length - a.length).map(escapeRe).join("|");
+const BRACKET_UNIT_RE = new RegExp(`^\\[(-?\\d+(?:\\.\\d+)?)(${UNIT_ALT})\\]$`);
 
 const rule: Rule.RuleModule = {
   meta: {

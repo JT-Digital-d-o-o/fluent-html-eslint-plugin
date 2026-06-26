@@ -8,6 +8,9 @@ export const VOCAB_METHODS: readonly string[] = ["absolute","alignItems","alignS
 /** Methods supporting the `(unit, amount)` arbitrary-value overload. */
 export const UNIT_METHODS: ReadonlySet<string> = new Set(["bottom","gap","h","inset","left","margin","maxH","maxW","minH","minW","padding","right","top","w"]);
 
+/** Arbitrary-value CSS units accepted by the `(unit, amount)` overload (lib `UNITS`). */
+export const VOCAB_UNITS: readonly string[] = ["%","dvh","em","lvh","px","rem","svh","vh","vw"];
+
 /** Methods that append classes (a later `setClass` would clobber them) — vocab + variant/callback methods. */
 export const FLUENT_MODIFIERS: ReadonlySet<string> = new Set([
   ...VOCAB_METHODS,

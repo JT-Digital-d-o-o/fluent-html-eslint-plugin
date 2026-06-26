@@ -18,6 +18,7 @@ Aligns the plugin with the fluent-html v6 (greenfield) API surface.
 - **`prefer-set-method`** — dropped the removed boolean setters from its map; now also flags `addAttribute("aria-*"/"data-*"/"style"/"role"/"title"/"tabindex")`, and maps `crossorigin`→`setCrossOrigin` / `referrerpolicy`→`setReferrerPolicy` (+ `hreflang`/`inputmode`/`http-equiv`).
 - **`prefer-form-for`** — its suggestion text now points to the `Form<T>` binding instead of the removed `formFor()` (the rule id is unchanged).
 - The generated class vocabulary tracks the v6 method set (134 methods), including the position/display shortcuts, `flexShorthand`, and `htmxIndicator`.
+- **`prefer-unit-overload`** — the CSS unit list (`px`/`rem`/`%`/`vh`/…) is now generated from the library's `UNITS` (via `VOCAB_UNITS` in `vocab.generated.ts`) and drift-guarded by `vocab-drift`, instead of being hardcoded in the rule.
 
 ### Fixed
 
