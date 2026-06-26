@@ -850,8 +850,7 @@ runSuite("prefer-unit-overload", preferUnitOverload, {
     { code: `Div().w("px", 200)` },
     { code: `Div().minH("rem", 12)` },
     { code: `Div().padding("em", 1.5)` },
-    // Bracket values on non-unit methods — not our concern
-    { code: `Div().textSize("[13px]")` },
+    // Bracket values on non-unit methods (opacity/zIndex have no unit overload) — not our concern
     { code: `Div().opacity("[0.33]")` },
     { code: `Div().zIndex("[999]")` },
     // Bracket values without a recognized CSS unit
@@ -869,6 +868,12 @@ runSuite("prefer-unit-overload", preferUnitOverload, {
       code: `Div().w("[200px]")`,
       output: `Div().w("px", 200)`,
       errors: [{ messageId: "preferUnitOverload", data: { method: "w", unit: "px", amount: "200", raw: "[200px]" } }],
+    },
+    // Scalar unit methods (F-C-160) — textSize now has the unit overload
+    {
+      code: `Div().textSize("[13px]")`,
+      output: `Div().textSize("px", 13)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "textSize", unit: "px", amount: "13", raw: "[13px]" } }],
     },
     {
       code: `Div().h("[100vh]")`,
