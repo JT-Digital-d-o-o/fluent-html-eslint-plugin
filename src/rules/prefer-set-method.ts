@@ -36,6 +36,7 @@ const ATTRIBUTE_TO_METHOD: Record<string, string> = {
   enctype: "setEnctype",
   list: "setList",
   size: "setSize",
+  dirname: "setDirname",
   // Media attributes
   loading: "setLoading",
   srcset: "setSrcset",
@@ -97,6 +98,8 @@ const ATTRIBUTE_TO_METHOD: Record<string, string> = {
   // Button attributes
   formaction: "setFormaction",
   formmethod: "setFormmethod",
+  formtarget: "setFormtarget",
+  formenctype: "setFormenctype",
   // Link attributes
   referrerpolicy: "setReferrerPolicy",
   // Area attributes
