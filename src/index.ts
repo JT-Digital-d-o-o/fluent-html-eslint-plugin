@@ -20,6 +20,7 @@ import preferHtmxApi = require("./rules/prefer-htmx-api");
 import preferFormFor = require("./rules/prefer-form-for");
 import noRemovedV4Utilities = require("./rules/no-removed-v4-utilities");
 import noRawIconString = require("./rules/no-raw-icon-string");
+import noFluentEquivalentInSetstyle = require("./rules/no-fluent-equivalent-in-setstyle");
 
 const plugin = {
   rules: {
@@ -45,6 +46,7 @@ const plugin = {
     "prefer-form-for": preferFormFor,
     "no-removed-v4-utilities": noRemovedV4Utilities,
     "no-raw-icon-string": noRawIconString,
+    "no-fluent-equivalent-in-setstyle": noFluentEquivalentInSetstyle,
   },
   configs: {
     recommended: {
@@ -72,6 +74,7 @@ const plugin = {
         "fluent-html/prefer-form-for": "warn",
         "fluent-html/no-removed-v4-utilities": "error",
         "fluent-html/no-raw-icon-string": "warn",
+        "fluent-html/no-fluent-equivalent-in-setstyle": "warn",
       },
     },
   },

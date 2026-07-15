@@ -1191,6 +1191,105 @@ runSuite("no-raw-icon-string", noRawIconString, {
 });
 
 // ------------------------------------
+// no-fluent-equivalent-in-setstyle
+// ------------------------------------
+
+const noFluentEquivalentInSetstyle = require("../dist/rules/no-fluent-equivalent-in-setstyle");
+
+runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
+  valid: [
+    // dynamic values — the legitimate escape hatch
+    { code: "Div().setStyle(`width: ${progress}%`)" },
+    { code: "Div().setStyle(`background-color: ${color}`)" },
+    // functional CSS — gradients, rgba, color-mix, clamp, var, url, calc
+    { code: `Div().setStyle("background:linear-gradient(120deg,#1a4e86,#0a2340)")` },
+    { code: `Div().setStyle("background:rgba(255,255,255,0.1)")` },
+    { code: `Div().setStyle("border-color:color-mix(in srgb, red 50%, blue)")` },
+    { code: `Div().setStyle("font-size:clamp(2.3rem,4.6vw,3.3rem)")` },
+    { code: `Div().setStyle("border-top:1px solid var(--color-border)")` },
+    { code: `Div().setStyles({ backgroundImage: "url('/img.png')", backgroundSize: "cover" })` },
+    // properties with no fluent equivalent
+    { code: `Div().setStyle("aspect-ratio:16/9")` },
+    { code: `Div().setStyle("backdrop-filter:blur(4px)")` },
+    // mixed: static part of a template decl touching an expression is skipped
+    { code: "Div().setStyle(`margin: ${x}px 0`)" },
+    // non-literal arg — skipped
+    { code: `Div().setStyle(styleVar)` },
+    // ignoredProperties option
+    { code: `Div().setStyle("width:44px")`, options: [{ ignoredProperties: ["width"] }] },
+    // unrelated setStyles value shapes — skipped
+    { code: `Div().setStyles({ width: someVar })` },
+  ],
+  invalid: [
+    // string form: unit-overload equivalents
+    {
+      code: `Div().setStyle("width:44px;height:44px")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "width: 44px", suggestion: '.w("px", 44)' } },
+        { messageId: "useFluentEquivalent", data: { decl: "height: 44px", suggestion: '.h("px", 44)' } },
+      ],
+    },
+    {
+      code: `Div().setStyle("font-size:1.9rem")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "font-size: 1.9rem", suggestion: '.textSize("rem", 1.9)' } }],
+    },
+    {
+      code: `Div().setStyle("letter-spacing:0.13em;line-height:1.6")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "letter-spacing: 0.13em", suggestion: '.tracking("em", 0.13)' } },
+        { messageId: "useFluentEquivalent", data: { decl: "line-height: 1.6", suggestion: '.leading(…)' } },
+      ],
+    },
+    // template literal: static declarations still flagged, dynamic ones skipped
+    {
+      code: "Div().setStyle(`width:44px;background:${tint}`)",
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "width: 44px", suggestion: '.w("px", 44)' } }],
+    },
+    // plain colors → theme token
+    {
+      code: `Div().setStyle("color:#FDB813")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "color: #FDB813", suggestion: ".textColor(…) with a theme token" } }],
+    },
+    {
+      code: `Div().setStyle("background:#fff")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background: #fff", suggestion: ".background(…) with a theme token" } }],
+    },
+    // keyword props
+    {
+      code: `Div().setStyle("white-space:nowrap")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "white-space: nowrap", suggestion: ".whitespace(…)" } }],
+    },
+    {
+      code: `Div().setStyle("display:flex;position:absolute")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "display: flex", suggestion: ".flex()" } },
+        { messageId: "useFluentEquivalent", data: { decl: "position: absolute", suggestion: ".absolute()" } },
+      ],
+    },
+    // multi-value shorthand
+    {
+      code: `Div().setStyle("padding:26px 24px 24px 28px")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "padding: 26px 24px 24px 28px", suggestion: ".padding(…) per side" } }],
+    },
+    // setStyles object form: camelCase keys
+    {
+      code: `Div().setStyles({ fontSize: "14px", textAlign: "center" })`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "font-size: 14px", suggestion: '.textSize("px", 14)' } },
+        { messageId: "useFluentEquivalent", data: { decl: "text-align: center", suggestion: ".textAlign(…)" } },
+      ],
+    },
+    {
+      code: `Div().setStyles({ margin: "24px 0", zIndex: 999 })`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "margin: 24px 0", suggestion: ".margin(…) per side" } },
+        { messageId: "useFluentEquivalent", data: { decl: "z-index: 999", suggestion: ".zIndex(…)" } },
+      ],
+    },
+  ],
+});
+
+// ------------------------------------
 // Summary
 // ------------------------------------
 

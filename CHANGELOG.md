@@ -2,6 +2,12 @@
 
 All notable changes to `eslint-plugin-fluent-html` are documented here.
 
+## [1.8.0]
+
+### Added
+
+- **`no-fluent-equivalent-in-setstyle`** (recommended: warn) — flags static CSS inside `.setStyle()`/`.setStyles()` that a fluent method already covers (`width:44px` → `.w("px", 44)`, `font-size:1.9rem` → `.textSize("rem", 1.9)`, plain hex colors → theme tokens). Interpolated and functional values (`linear-gradient()`, `rgba()`, `color-mix()`, `clamp()`, `calc()`, `var()`, `url()`) and properties with no fluent equivalent are never flagged — those remain the legitimate inline-style escape hatch. Takes `{ ignoredProperties }`; email views should disable it via a config override since email requires inline CSS.
+
 ## [1.7.0] - fluent-html v6
 
 Aligns the plugin with the fluent-html v6 (greenfield) API surface.

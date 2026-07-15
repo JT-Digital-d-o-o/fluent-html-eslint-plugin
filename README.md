@@ -141,6 +141,7 @@ All rules are included in the `recommended` preset at the severity shown. 🔧 =
 | `prefer-form-for` | warn | Untyped form fields → the typed `Form<T>` binding |
 | `no-removed-v4-utilities` | error | **(v6)** Tailwind v3 utilities removed in v4 (`*-opacity-*`, `bg-gradient-*`, …) |
 | `no-raw-icon-string` | warn | **(v6)** `Raw("<svg…>")` icon injection → the typed SVG builders |
+| `no-fluent-equivalent-in-setstyle` | warn | Static CSS in `setStyle`/`setStyles` that a fluent method already covers (`width:44px` → `.w("px", 44)`) |
 
 ## Rule: `no-known-modifiers-in-setclass`
 
@@ -228,6 +229,21 @@ Div().setClass("my-custom-class another-custom-class")
 // Disabled
 "fluent-html/no-known-modifiers-in-setclass": "off"
 ```
+
+## Rule: `no-fluent-equivalent-in-setstyle`
+
+Flags static CSS declarations inside `.setStyle("…")` / `.setStyles({…})` that the fluent API already expresses — inline styles are reserved for CSS with no fluent or token equivalent.
+
+**Flagged:** static sizing/spacing/position (`width`, `height`, `min/max-*`, `top/right/bottom/left`, `inset`, `gap`, `margin`, `padding`), typography (`font-size`, `line-height`, `letter-spacing`, `font-weight`, `text-align`, `white-space`), `border-radius`, `z-index`, `opacity`, `cursor`, `overflow`, `display`/`position` keywords, and plain colors (hex / `white` / `black` / `transparent`) on `color`/`background`/`background-color`/`border-color`.
+
+**Never flagged (the legitimate escape hatch):**
+- Interpolated values — `` setStyle(`width: ${progress}%`) ``; in a mixed template literal only the declarations touching an expression are skipped, static ones are still checked
+- Functional values (anything containing `(`) — `linear-gradient()`, `rgba()`, `color-mix()`, `clamp()`, `calc()`, `var()`, `url()`
+- Properties with no fluent equivalent — `aspect-ratio`, `backdrop-filter`, …
+
+**Options:** `{ ignoredProperties: ["width", …] }` skips the listed CSS properties.
+
+Email views should disable the rule wholesale via a config override (`files: ["src/infra/email/**"]`) — email clients require inline CSS, so `setStyles` is correct there.
 
 ## License
 
