@@ -2,6 +2,12 @@
 
 All notable changes to `eslint-plugin-fluent-html` are documented here.
 
+## [1.9.0]
+
+### Added
+
+- **`prefer-foreach`** (recommended: warn, 🔧) — flags `.map()` used as element children and rewrites it to `ForEach`. Catches **both** the spread form `Div(...xs.map(Row))` and the array-child form `Div(xs.map(Row))` (neither of which `prefer-variadic-children` sees — that rule only matches a literal `[a, b]` array). Only `ForEach` carries the `count`/range overloads and the `ForEachKeyed` morph-stable upgrade path, so a raw `.map()` silently forfeits keyed reconciliation (focus/scroll on reorder). The fix drops the `...`, wraps the list (`Div(ForEach(xs, Row))`), and adds `ForEach` to the existing `fluent-html` import when missing. Report-only (no auto-fix) for the two behaviour-changing shapes: a callback that reads the 3rd `array` param (`ForEach` passes only `(item, index)`) and `.map(fn, thisArg)` (no `ForEach` slot for `thisArg`). Gated on the built-in element functions, so descriptor arrays (`f.select("role", OPTIONS.map(…))`), `.flatMap()`, and plain data transforms are never touched.
+
 ## [1.8.0]
 
 ### Added

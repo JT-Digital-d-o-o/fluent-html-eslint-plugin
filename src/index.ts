@@ -7,6 +7,7 @@ import noMultipleSetclassInChain = require("./rules/no-multiple-setclass-in-chai
 import noSetclassAfterFluentModifier = require("./rules/no-setclass-after-fluent-modifier");
 import noSetclassInWhenApplyCallback = require("./rules/no-setclass-in-when-apply-callback");
 import preferVariadicChildren = require("./rules/prefer-variadic-children");
+import preferForeach = require("./rules/prefer-foreach");
 import noConditionalInSetclass = require("./rules/no-conditional-in-setclass");
 import noInnerHtmlSwap = require("./rules/no-innerhtml-swap");
 import preferSetMethod = require("./rules/prefer-set-method");
@@ -33,6 +34,7 @@ const plugin = {
     "no-setclass-after-fluent-modifier": noSetclassAfterFluentModifier,
     "no-setclass-in-when-apply-callback": noSetclassInWhenApplyCallback,
     "prefer-variadic-children": preferVariadicChildren,
+    "prefer-foreach": preferForeach,
     "no-conditional-in-setclass": noConditionalInSetclass,
     "no-innerhtml-swap": noInnerHtmlSwap,
     "prefer-set-method": preferSetMethod,
@@ -61,6 +63,7 @@ const plugin = {
         "fluent-html/no-setclass-after-fluent-modifier": "error",
         "fluent-html/no-setclass-in-when-apply-callback": "error",
         "fluent-html/prefer-variadic-children": "warn",
+        "fluent-html/prefer-foreach": "warn",
         "fluent-html/no-conditional-in-setclass": "warn",
         "fluent-html/no-innerhtml-swap": "error",
         "fluent-html/prefer-set-method": "warn",

@@ -128,6 +128,7 @@ All rules are included in the `recommended` preset at the severity shown. 🔧 =
 | `no-setclass-after-fluent-modifier` | error | `.setClass()` after a fluent modifier (`.padding()`, `.on()`, …) silently drops it |
 | `no-setclass-in-when-apply-callback` | error | `.setClass()` inside a `.when()`/`.apply()` callback |
 | `prefer-variadic-children` 🔧 | warn | Pass children variadically, not as an array (`Div(a, b)`, not `Div([a, b])`) |
+| `prefer-foreach` 🔧 | warn | `.map()` as element children → `ForEach` (`Div(...xs.map(Row))` / `Div(xs.map(Row))` → `Div(ForEach(xs, Row))`) |
 | `no-conditional-in-setclass` | warn | Ternaries/conditionals embedded in a class string |
 | `no-innerhtml-swap` 🔧 | error | `innerHTML`/`outerHTML` swaps — prefer `outerMorph` |
 | `prefer-set-method` 🔧 | warn | `addAttribute("type", …)` → `.setType(…)`; flags `aria-*`/`data-*`/`style`/`role`/`title`/`tabindex` |

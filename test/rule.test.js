@@ -4,6 +4,7 @@ const noKnownModifiersInSetclass = require("../dist/rules/no-known-modifiers-in-
 const noSetclassInWhenApplyCallback = require("../dist/rules/no-setclass-in-when-apply-callback");
 const noSetclassAfterFluentModifier = require("../dist/rules/no-setclass-after-fluent-modifier");
 const preferVariadicChildren = require("../dist/rules/prefer-variadic-children");
+const preferForeach = require("../dist/rules/prefer-foreach");
 const noConditionalInSetclass = require("../dist/rules/no-conditional-in-setclass");
 const noInnerHtmlSwap = require("../dist/rules/no-innerhtml-swap");
 const preferSetMethod = require("../dist/rules/prefer-set-method");
@@ -392,6 +393,69 @@ runSuite("prefer-variadic-children", preferVariadicChildren, {
       code: `Table([Thead(Tr()), Tbody(Tr())])`,
       output: `Table(Thead(Tr()), Tbody(Tr()))`,
       errors: [{ messageId: "preferVariadic" }],
+    },
+  ],
+});
+
+// ------------------------------------
+// prefer-foreach
+// ------------------------------------
+
+runSuite("prefer-foreach", preferForeach, {
+  valid: [
+    // Already using ForEach — correct
+    { code: `Div(ForEach(items, (i) => Li(i)))` },
+    // Plain variadic children — no map
+    { code: `Div(Card(a), Card(b))` },
+    // Array literal child — that's prefer-variadic-children's job, not a .map()
+    { code: `Div([Li("A"), Li("B")])` },
+    // .map() on a NON-element call (descriptor array, data transform) — not children
+    { code: `f.select("role", OPTIONS.map((o) => ({ value: o })))` },
+    { code: `const ids = items.map((i) => i.id)` },
+    { code: `myFunc(items.map((i) => i.id))` },
+    // .flatMap() is not .map() and has no ForEach equivalent
+    { code: `Div(items.flatMap((i) => Li(i)))` },
+    // .map().join(...) — the direct arg is .join, not .map
+    { code: `Span(words.map((w) => w).join(", "))` },
+    // Computed member — not a literal .map access
+    { code: `Div(items["map"](fn))` },
+  ],
+  invalid: [
+    // Array-child form, named component, ForEach added to the import
+    {
+      code: `import { Div } from "fluent-html";\nDiv(STATS.map(StatBlock))`,
+      output: `import { Div, ForEach } from "fluent-html";\nDiv(ForEach(STATS, StatBlock))`,
+      errors: [{ messageId: "preferForeach", data: { name: "Div", list: "STATS" } }],
+    },
+    // Spread form, named component — the `...` is dropped, import extended
+    {
+      code: `import { Div } from "fluent-html";\nDiv(...CARDS.map(TestimonialCard))`,
+      output: `import { Div, ForEach } from "fluent-html";\nDiv(ForEach(CARDS, TestimonialCard))`,
+      errors: [{ messageId: "preferForeach" }],
+    },
+    // Inline arrow with index, ForEach already imported — no import change
+    {
+      code: `import { Div, ForEach } from "fluent-html";\nDiv(...POSTS.map((post, i) => PostCell(post, i)))`,
+      output: `import { Div, ForEach } from "fluent-html";\nDiv(ForEach(POSTS, (post, i) => PostCell(post, i)))`,
+      errors: [{ messageId: "preferForeach" }],
+    },
+    // Multiple violations in one file — import is added exactly once
+    {
+      code: `import { Div } from "fluent-html";\nDiv(A.map(x));\nDiv(...B.map(y));`,
+      output: `import { Div, ForEach } from "fluent-html";\nDiv(ForEach(A, x));\nDiv(ForEach(B, y));`,
+      errors: [{ messageId: "preferForeach" }, { messageId: "preferForeach" }],
+    },
+    // Non-fixable: callback reads the 3rd `array` param — flagged, not auto-fixed
+    {
+      code: `import { Ul } from "fluent-html";\nUl(...items.map((x, i, arr) => Li(arr.length)))`,
+      output: null,
+      errors: [{ messageId: "preferForeach" }],
+    },
+    // Non-fixable: `.map(fn, thisArg)` — the second arg has no ForEach slot
+    {
+      code: `import { Div } from "fluent-html";\nDiv(...items.map(fn, thisArg))`,
+      output: null,
+      errors: [{ messageId: "preferForeach" }],
     },
   ],
 });
