@@ -107,7 +107,7 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
     {
       code: `Div().addClass("backdrop-blur-sm")`,
       output: `Div().backdropBlur("sm")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "backdrop-blur-sm", method: "backdropBlur()" } }],
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "backdrop-blur-sm", method: "backdropBlur('sm')" } }],
     },
     // line-clamp
     {
@@ -137,7 +137,7 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
     {
       code: `Div().addClass("ease-out")`,
       output: `Div().ease("out")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "ease-out", method: "ease()" } }],
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "ease-out", method: "ease('out')" } }],
     },
     // addClass with single base utility
     {

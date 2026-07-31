@@ -2,6 +2,23 @@
 
 All notable changes to `eslint-plugin-fluent-html` are documented here.
 
+## [2.0.0] - Vocab-derived fix tables
+
+`no-known-modifiers-in-setclass` no longer carries a hand-maintained pattern table — the ~780-line `FIXABLE_PATTERNS`/`MODIFIER_MAP` block is **derived from `fluent-html/class-vocab` at rule-load** (fluent-html's C-05 single source of truth, ~600 patterns). The hand table had already drifted: it was missing `shadowColor`/`fontFamily` prefix coverage and the `group`/`peer` markers, and suggested methods deleted in fluent-html v6 (`.position()`, `.display()`, `.flex1()`).
+
+### 💥 Breaking
+
+- **`fluent-html` >= 6.7.0 is now a peer dependency** (that release added the `values`/`doc` row enrichment the derivation reads). Only `no-known-modifiers-in-setclass` loads it — lazily, with a descriptive error if it's missing — so the other rules keep working without the peer.
+- **Node >= 20.19 required** (`engines`): fluent-html ships ESM and the CJS rule loads it via `require(esm)`.
+- **Autofix targets changed where the old table was wrong**: `absolute`/`relative`/… → `.absolute()`/`.relative()` (was dead `.position(...)`), display keywords → `.block()`/`.inlineBlock()`/… (was dead `.display(...)`), `flex-1` → `.flex("1")` (was dead `.flex1()`).
+
+### ✨ Added
+
+- Coverage the hand table never had, for free from the vocab: all v6 methods (`stroke-*` width/color split, `decoration-*` style/thickness/color split, `text-shadow-*`/`drop-shadow-*`/`inset-shadow-*` size/color splits, `snap-align-*`, `mask-*` composites, 3D transforms `rotate-x-*`/`scale-z-*`, grid lines `col-start-*`, gradient keyword exacts `bg-linear-to-*` vs angle `bg-linear-45`, `@container`, named `group/`/`peer/` markers, and every literals-list keyword as an exact match with its value in the message, e.g. `ease-out` → `.ease('out')`).
+- Directional two-arg exact fixes (`overflow-x-auto` → `.overflow("x", "auto")`).
+- Collision guards: a vocab row whose prefix is claimed twice without a residue entry, or two rows emitting the same exact class without a preference entry, throw at rule-load — new library releases can never silently mis-map.
+- `test/derivation.test.js` — ordering invariants, drift pins, residue disambiguation, end-to-end autofix through the derived table.
+
 ## [1.9.0]
 
 ### Added

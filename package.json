@@ -3,7 +3,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.9.0",
+  "version": "2.0.0",
   "description": "ESLint plugin for fluent-html - lint rules for setClass, variadic children, HTMX best practices, type-safe IDs, and more",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,7 +16,7 @@
     "gen:vocab": "node scripts/gen-vocab.mjs",
     "build": "tsc",
     "prepare": "npm run build",
-    "test": "node test/rule.test.js && node test/vocab-drift.mjs",
+    "test": "node test/rule.test.js && node test/derivation.test.js && node test/vocab-drift.mjs",
     "prepublishOnly": "npm run build"
   },
   "repository": {
@@ -43,13 +43,18 @@
   ],
   "license": "ISC",
   "peerDependencies": {
-    "eslint": ">=7.0.0"
+    "eslint": ">=7.0.0",
+    "fluent-html": ">=6.7.0"
   },
   "devDependencies": {
     "@types/eslint": "^8.0.0",
     "@types/node": "^20.0.0",
     "@typescript-eslint/parser": "^5.62.0",
     "eslint": "^8.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "fluent-html": "file:../fluent-html"
+  },
+  "engines": {
+    "node": ">=20.19.0"
   }
 }

@@ -71,6 +71,8 @@ Div().background("red-500").padding("4").setClass("my-custom-class")
 npm install --save-dev eslint-plugin-fluent-html
 ```
 
+Since v2.0.0 the plugin declares `fluent-html` (>= 6.7.0) as a **peer dependency**: the `no-known-modifiers-in-setclass` fix tables are derived from `fluent-html/class-vocab` at rule-load, so they can never drift from the library's actual styling vocabulary. Your app already depends on `fluent-html`, so normally there is nothing to install — but linting must run on **Node >= 20.19** (the lib ships ESM; the plugin loads it via `require(esm)`). Only that one rule needs the peer; every other rule works without it.
+
 ## Usage
 
 ### Flat Config (ESLint 9+)
@@ -150,7 +152,9 @@ Warns when `.setClass()` is called with Tailwind classes that have dedicated flu
 
 ### Detected Patterns
 
-The rule checks for these Tailwind class patterns and suggests alternatives:
+The fix tables are **derived from `fluent-html/class-vocab` at rule-load** (~1ms, once per lint run): closed keyword lists (`values.literals` rows) become exact matches through the row's own emit function, emit shapes become prefix patterns, and a small hand-kept residue disambiguates shared prefixes by value shape (`border-2` width vs `border-red-500` color, `text-center` alignment vs `text-white` color vs `text-sm` size). A new styling method in the library is picked up by the linter automatically on upgrade.
+
+Representative examples of the ~600 derived patterns:
 
 | Pattern | Suggested Method |
 |---------|-----------------|
