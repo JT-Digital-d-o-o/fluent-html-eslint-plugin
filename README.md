@@ -1,6 +1,6 @@
 # eslint-plugin-fluent-html
 
-ESLint plugin for [fluent-html](https://github.com/JT-Digital-d-o-o/fluent-html) that warns when `.setClass()` is used with Tailwind CSS classes that have dedicated fluent-styling methods.
+ESLint plugin for [fluent-html](https://github.com/JT-Digital-d-o-o/fluent-html) that blocks Tailwind-in-raw-class-string styling and autofixes it to the typed fluent surface.
 
 ## The Problem
 
@@ -9,29 +9,29 @@ When using fluent-html's fluent-styling API, calling `.setClass()` can override 
 ```typescript
 // This is problematic:
 Div()
-  .background("green-700")  // Sets bg-green-700
-  .padding("4")             // Sets p-4
+  .bg("green-700")          // Sets bg-green-700
+  .p("4")                   // Sets p-4
   .setClass("bg-red-500")   // Overwrites everything! Only bg-red-500 remains
 ```
 
-The `.setClass()` method **replaces** all classes, while dedicated methods like `.background()`, `.padding()`, etc., **append** classes safely.
+The `.setClass()` method **replaces** all classes, while dedicated methods like `.bg()`, `.p()`, etc., **append** classes safely.
 
 ## The Solution
 
-This ESLint plugin warns you when `.setClass()` contains classes that have dedicated methods, and can **automatically fix** them:
+This ESLint plugin warns you when raw class strings carry Tailwind utilities that have dedicated methods, and can **automatically fix** them:
 
 ```typescript
-// ❌ Warning: Use .background() instead
+// ❌ Error: Tailwind utilities in a raw class string
 Div().setClass("bg-red-500 p-4")
 
 // ✅ Auto-fixed to:
-Div().background("red-500").padding("4")
+Div().bg("red-500").p("4")
 
-// ✅ Also correct: Use .addClass() for additional classes
+// ✅ Variants use .on()/.at() — never raw "hover:…"/"md:…" strings
 Div()
-  .background("red-500")
-  .padding("4")
-  .addClass("hover:bg-red-600")  // For pseudo-classes, this is fine
+  .bg("red-500")
+  .p("4")
+  .on("hover", t => t.bg("red-600"))
 ```
 
 ### Auto-Fix
@@ -53,7 +53,7 @@ Div().setClass("bg-red-500 p-4 flex justify-center items-center rounded-lg shado
 
 **After `--fix`:**
 ```typescript
-Div().background("red-500").padding("4").flex().justifyContent("center").alignItems("center").rounded("lg").shadow("md")
+Div().bg("red-500").p("4").flex().justify("center").items("center").rounded("lg").shadow("md")
 ```
 
 Mixed classes (some convertible, some not) are also handled:
@@ -62,7 +62,7 @@ Mixed classes (some convertible, some not) are also handled:
 Div().setClass("bg-red-500 my-custom-class p-4")
 
 // After --fix
-Div().background("red-500").padding("4").setClass("my-custom-class")
+Div().bg("red-500").p("4").setClass("my-custom-class")
 ```
 
 ## Installation
@@ -130,7 +130,7 @@ All rules are included in the `recommended` preset at the severity shown. 🔧 =
 | `no-conflicting-classes-in-setclass` | warn | Mutually-exclusive classes in one `.setClass()` (incl. v4 gradient families) |
 | `no-empty-setclass` 🔧 | warn | `.setClass("")` / no-op class calls |
 | `no-multiple-setclass-in-chain` | error | More than one `.setClass()` in a chain (the later clobbers the earlier) |
-| `no-setclass-after-fluent-modifier` | error | `.setClass()` after a fluent modifier (`.padding()`, `.on()`, …) silently drops it |
+| `no-setclass-after-fluent-modifier` | error | `.setClass()` after a fluent modifier (`.p()`, `.on()`, …) silently drops it |
 | `no-setclass-in-when-apply-callback` | error | `.setClass()` inside a `.when()`/`.apply()` callback |
 | `prefer-variadic-children` 🔧 | warn | Pass children variadically, not as an array (`Div(a, b)`, not `Div([a, b])`) |
 | `prefer-foreach` 🔧 | warn | `.map()` as element children → `ForEach` (`Div(...xs.map(Row))` / `Div(xs.map(Row))` → `Div(ForEach(xs, Row))`) |
@@ -178,24 +178,24 @@ Representative examples of the ~600 derived patterns:
 
 | Pattern | Suggested Method |
 |---------|-----------------|
-| `p-*`, `px-*`, `py-*`, `pt-*`, etc. | `.padding()` |
-| `m-*`, `mx-*`, `my-*`, `mt-*`, etc. | `.margin()` |
-| `bg-*` | `.background()` |
-| `text-red-*`, `text-blue-*`, etc. | `.textColor()` |
-| `text-xl`, `text-2xl`, etc. | `.textSize()` |
-| `text-center`, `text-left`, etc. | `.textAlign()` |
-| `font-bold`, `font-semibold`, etc. | `.fontWeight()` |
+| `p-*` | `.p()` |
+| `px-*`, `py-*`, `pt-*`, etc. | `.px()`, `.py()`, `.pt()`, … |
+| `m-*` | `.m()` |
+| `mx-*`, `my-*`, `mt-*`, etc. | `.mx()`, `.my()`, `.mt()`, … |
+| `bg-*` | `.bg()` |
+| `text-*` (color, size, alignment, wrap) | `.text()` |
+| `font-bold`, `font-semibold`, `font-mono`, etc. | `.font()` |
 | `w-*`, `h-*` | `.w()`, `.h()` |
 | `max-w-*`, `min-w-*` | `.maxW()`, `.minW()` |
-| `flex`, `flex-col`, `flex-row` | `.flex()`, `.flexDirection()` |
-| `justify-*`, `items-*` | `.justifyContent()`, `.alignItems()` |
+| `flex`, `flex-1`, `flex-col`, `flex-wrap` | `.flex()` |
+| `justify-*`, `items-*` | `.justify()`, `.items()` |
 | `gap-*` | `.gap()` |
 | `grid`, `grid-cols-*` | `.grid()`, `.gridCols()` |
-| `border`, `border-*` | `.border()`, `.borderColor()` |
+| `border`, `border-*` (width, style, color) | `.border()` |
 | `rounded`, `rounded-*` | `.rounded()` |
 | `shadow`, `shadow-*` | `.shadow()` |
 | `relative`, `absolute`, `fixed`, etc. | `.relative()`, `.absolute()`, `.fixed()` |
-| `z-*`, `opacity-*`, `cursor-*` | `.zIndex()`, `.opacity()`, `.cursor()` |
+| `z-*`, `opacity-*`, `cursor-*` | `.z()`, `.opacity()`, `.cursor()` |
 | `overflow-*` | `.overflow()` |
 
 ### Examples
@@ -214,31 +214,30 @@ Div().setClass("text-xl font-bold text-center")
 
 ```typescript
 // Use dedicated methods
-Div().background("red-500")
-Div().padding("4").margin("2")
-Div().flex().justifyContent("center").alignItems("center")
-Div().textSize("xl").fontWeight("bold").textAlign("center")
+Div().bg("red-500")
+Div().p("4").m("2")
+Div().flex().justify("center").items("center")
+Div().text("xl").font("bold").text("center")
 
-// Use .addClass() for classes without dedicated methods
+// Variants via .on()/.at() — the autofix folds "hover:bg-red-600" into this form
 Div()
-  .background("red-500")
-  .addClass("hover:bg-red-600 focus:ring-2")  // Pseudo-classes are fine
+  .bg("red-500")
+  .on("hover", t => t.bg("red-600"))
+  .on("focus", t => t.ring("2"))
 
-// Or use .setClass() for completely custom classes
-Div().setClass("my-custom-class another-custom-class")
+// Non-Tailwind classes (JS hooks, third-party widgets) use the intent marker
+Div().cssClass("js-map-container")
 ```
 
-## When to Use `.setClass()` vs `.addClass()`
+## Escape hatches — where each raw need goes
 
-- **Use dedicated methods** (`.background()`, `.padding()`, etc.) for base styles
-- **Use `.addClass()`** for:
-  - Responsive variants: `md:w-1/2`, `lg:flex-row`
-  - Pseudo-classes: `hover:bg-blue-600`, `focus:ring-2`
-  - State variants: `active:scale-95`, `disabled:opacity-50`
-  - Custom classes without dedicated methods
-- **Use `.setClass()`** only when:
-  - You need to completely replace all classes
-  - You're using custom classes that don't conflict with fluent-styling methods
+- **Base styles** → dedicated methods (`.bg()`, `.p()`, …); **variants** → `.on()` / `.at()`
+- **Arbitrary value of a covered utility** → bracket arm or unit overload: `.text("[13px]")`, `.w("px", 180)`
+- **CSS property with no Tailwind utility** → `.cssProp("mask-repeat", "no-repeat")`
+- **Legit non-Tailwind class** → `.cssClass("js-hook")` (`no-tailwind-in-cssclass` guards against mis-filed utilities)
+- **Runtime-computed style value** → `.setStyle(...)`
+
+Raw Tailwind in `.setClass()`/`.addClass()`/`.cssClass()` is an **error** under the recommended preset (`no-tailwind-in-raw-class`), and non-literal class arguments are blocked by `no-dynamic-class-argument`.
 
 ## Configuration
 
@@ -246,10 +245,10 @@ Div().setClass("my-custom-class another-custom-class")
 
 ```javascript
 // Error (blocks build)
-"fluent-html/no-known-modifiers-in-setclass": "error"
+"fluent-html/no-tailwind-in-raw-class": "error"
 
 // Warning (shows warning but doesn't block)
-"fluent-html/no-known-modifiers-in-setclass": "warn"
+"fluent-html/no-tailwind-in-raw-class": "warn"
 
 // Disabled
 "fluent-html/no-known-modifiers-in-setclass": "off"

@@ -16,6 +16,10 @@ The lint arm of fluent-html's `llm-styling/canonical-names` (pairs with fluent-h
 
 - **Regenerated vocab tables** for the canonical surface (189 methods, 38 unit methods, 638 derived patterns).
 
+### 📝 Docs
+
+- README rewritten to the canonical surface: pattern table shows the merged prefixes and shorthand owners, and the stale `.addClass("hover:…")` teaching is gone — variants are `.on()`/`.at()`, with the escape-hatch decision list (`.cssProp()`/`.cssClass()`/`.setStyle()`) in its place; config examples reference `no-tailwind-in-raw-class` instead of the deprecated rule.
+
 ## [3.0.0] - Escape-hatch closure: CI-blocking raw-class rules
 
 The lint arm of fluent-html's `llm-styling/escape-hatch` scope (pairs with fluent-html 6.8.0).
