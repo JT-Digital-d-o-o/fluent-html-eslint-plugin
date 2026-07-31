@@ -1354,6 +1354,161 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
 });
 
 // ------------------------------------
+// no-tailwind-in-raw-class (escape-hatch rule set)
+// ------------------------------------
+
+const noTailwindInRawClass = require("../dist/rules/no-tailwind-in-raw-class");
+const noDynamicClassArgument = require("../dist/rules/no-dynamic-class-argument");
+const noTailwindInCssclass = require("../dist/rules/no-tailwind-in-cssclass");
+
+runSuite("no-tailwind-in-raw-class", noTailwindInRawClass, {
+  valid: [
+    // Category-C false-positive guards: Tailwind-shaped, but the root is not a
+    // Tailwind utility root — never flagged (PRD rabbit hole).
+    { code: `Div().addClass("sidebar-backdrop")` },
+    { code: `Div().addClass("entry-row")` },
+    { code: `Div().addClass("hamburger-line")` },
+    { code: `Div().setClass("js-map-container")` },
+    // bare single words are deliberately out of shape (collision-prone)
+    { code: `Div().addClass("container")` },
+    { code: `Div().addClass("card")` },
+    // unknown variant head + unknown base — not recognizably Tailwind
+    { code: `Div().addClass("foo:bar-baz")` },
+    // ignoredClasses escape stays available
+    { code: `Div().addClass("bg-grid")`, options: [{ ignoredClasses: ["bg-grid"] }] },
+  ],
+  invalid: [
+    // mapped utility — autofix, message states the exact replacement
+    {
+      code: `Div().addClass("grid-cols-1")`,
+      output: `Div().gridCols("1")`,
+      errors: [{
+        message: `'grid-cols-1' in .addClass() bypasses the typed surface. Replace with: .gridCols("1"). [autofix]`,
+      }],
+    },
+    // the design's flagship case: variant token folds into .at()
+    {
+      code: `Div().addClass("grid-cols-1 sm:grid-cols-2")`,
+      output: `Div().gridCols("1").at("sm", t => t.gridCols("2"))`,
+      errors: [
+        { messageId: "replaceWith", data: { callee: "addClass", className: "grid-cols-1", fluentChain: `.gridCols("1")` } },
+        { messageId: "replaceWith", data: { callee: "addClass", className: "sm:grid-cols-2", fluentChain: `.at("sm", t => t.gridCols("2"))` } },
+      ],
+    },
+    // state variant → .on(); multi-level variants nest
+    {
+      code: `Div().addClass("hover:bg-blue-600")`,
+      output: `Div().on("hover", t => t.background("blue-600"))`,
+      errors: [{ messageId: "replaceWith" }],
+    },
+    {
+      code: `Div().addClass("sm:hover:bg-blue-600")`,
+      output: `Div().at("sm", t => t.on("hover", t1 => t1.background("blue-600")))`,
+      errors: [{ messageId: "replaceWith" }],
+    },
+    // unknown-but-Tailwind-shaped with a real root (PRD: shadow-violet-500/40)
+    {
+      code: `Div().addClass("shadow-violet-500/40")`,
+      output: `Div().shadowColor("violet-500/40")`,
+      errors: [{ messageId: "replaceWith" }],
+    },
+    // Tailwind root with no fluent method → routes to .cssProp / vocab gap
+    {
+      code: `Div().addClass("basis-32")`,
+      errors: [{ messageId: "tailwindNoMethod", data: { callee: "addClass", className: "basis-32", root: "basis" } }],
+    },
+    // mixed literal: mappable tokens rewritten, non-Tailwind kept in the call
+    {
+      code: `Div().addClass("p-4 sidebar-backdrop")`,
+      output: `Div().padding("4").addClass("sidebar-backdrop")`,
+      errors: [{ messageId: "replaceWith" }],
+    },
+    // setClass flagged identically
+    {
+      code: `Div().setClass("flex items-center gap-4")`,
+      output: `Div().flex().alignItems("center").gap("4")`,
+      errors: [
+        { messageId: "replaceWith" },
+        { messageId: "replaceWith" },
+        { messageId: "replaceWith" },
+      ],
+    },
+    // arbitrary-selector variant head is recognized
+    {
+      code: `Div().addClass("[&>li]:p-2")`,
+      output: `Div().on("[&>li]", t => t.padding("2"))`,
+      errors: [{ messageId: "replaceWith" }],
+    },
+    // setClasses array elements are analyzed (no autofix)
+    {
+      code: `Div().setClasses(["p-4", "entry-row"])`,
+      errors: [{ messageId: "replaceWith" }],
+    },
+  ],
+});
+
+// ------------------------------------
+// no-dynamic-class-argument
+// ------------------------------------
+
+runSuite("no-dynamic-class-argument", noDynamicClassArgument, {
+  valid: [
+    { code: `Div().addClass("p-4 bg-white")` },
+    { code: `Div().setClass("container mx-auto")` },
+    { code: `Div().cssClass("js-hook")` },
+    // template literal without interpolation is static
+    { code: "Div().addClass(`p-4`)" },
+    // setClasses is the sanctioned conditional-array form — not this rule's target
+    { code: `Div().setClasses([cond && "p-4"])` },
+  ],
+  invalid: [
+    {
+      code: `Div().addClass(colors)`,
+      errors: [{
+        message: `.addClass(colors) is invisible to the safelist extractor — styles can silently disappear in production. Use .when(...) / Match(...) with literal classes per branch, or defineTheme's staticManifest for token-driven values.`,
+      }],
+    },
+    { code: `Div().addClass(cond ? "bg-red-500" : "bg-green-500")`, errors: [{ messageId: "dynamicArg" }] },
+    { code: "Div().addClass(`bg-${color}`)", errors: [{ messageId: "dynamicArg" }] },
+    { code: `Div().setClass(classNames.join(" "))`, errors: [{ messageId: "dynamicArg" }] },
+    { code: `Div().cssClass(hookName)`, errors: [{ messageId: "dynamicArg" }] },
+  ],
+});
+
+// ------------------------------------
+// no-tailwind-in-cssclass
+// ------------------------------------
+
+runSuite("no-tailwind-in-cssclass", noTailwindInCssclass, {
+  valid: [
+    { code: `Div().cssClass("js-map-container")` },
+    { code: `Div().cssClass("shepherd-target")` },
+    { code: `Div().cssClass("sidebar-backdrop entry-row")` },
+    // dynamic args are no-dynamic-class-argument's job
+    { code: `Div().cssClass(name)` },
+  ],
+  invalid: [
+    {
+      code: `Div().cssClass("p-4")`,
+      output: `Div().padding("4")`,
+      errors: [{ messageId: "tailwindInCssClass", data: { className: "p-4", fluentChain: `.padding("4")` } }],
+    },
+    // mixed: utility extracted, legit hook kept
+    {
+      code: `Div().cssClass("js-hook bg-red-500")`,
+      output: `Div().background("red-500").cssClass("js-hook")`,
+      errors: [{ messageId: "tailwindInCssClass" }],
+    },
+    // variant token is Tailwind by its head
+    {
+      code: `Div().cssClass("hover:bg-blue-600")`,
+      output: `Div().on("hover", t => t.background("blue-600"))`,
+      errors: [{ messageId: "tailwindInCssClass" }],
+    },
+  ],
+});
+
+// ------------------------------------
 // Summary
 // ------------------------------------
 

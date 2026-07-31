@@ -71,7 +71,7 @@ Div().background("red-500").padding("4").setClass("my-custom-class")
 npm install --save-dev eslint-plugin-fluent-html
 ```
 
-Since v2.0.0 the plugin declares `fluent-html` (>= 6.7.0) as a **peer dependency**: the `no-known-modifiers-in-setclass` fix tables are derived from `fluent-html/class-vocab` at rule-load, so they can never drift from the library's actual styling vocabulary. Your app already depends on `fluent-html`, so normally there is nothing to install — but linting must run on **Node >= 20.19** (the lib ships ESM; the plugin loads it via `require(esm)`). Only that one rule needs the peer; every other rule works without it.
+Since v2.0.0 the plugin declares `fluent-html` (>= 6.7.0) as a **peer dependency**: the raw-class fix tables (`no-tailwind-in-raw-class`, and the deprecated `no-known-modifiers-in-setclass`) are derived from `fluent-html/class-vocab` at rule-load, so they can never drift from the library's actual styling vocabulary. Your app already depends on `fluent-html`, so normally there is nothing to install — but linting must run on **Node >= 20.19** (the lib ships ESM; the plugin loads it via `require(esm)`). Only those rules need the peer; every other rule works without it.
 
 ## Usage
 
@@ -87,7 +87,7 @@ export default [
       "fluent-html": fluentHtml
     },
     rules: {
-      "fluent-html/no-known-modifiers-in-setclass": "warn"
+      "fluent-html/no-tailwind-in-raw-class": "error"
     }
   }
 ];
@@ -110,7 +110,7 @@ Or configure manually:
 module.exports = {
   plugins: ["fluent-html"],
   rules: {
-    "fluent-html/no-known-modifiers-in-setclass": "warn",
+    "fluent-html/no-tailwind-in-raw-class": "error",
   },
 };
 ```
@@ -121,7 +121,10 @@ All rules are included in the `recommended` preset at the severity shown. 🔧 =
 
 | Rule | Recommended | What it does |
 |------|:-----------:|--------------|
-| `no-known-modifiers-in-setclass` 🔧 | warn | `.setClass()`/`.addClass()` with a Tailwind class that has a dedicated fluent method |
+| `no-tailwind-in-raw-class` 🔧 | error | **(v3)** Tailwind utilities in `.addClass()`/`.setClass()`/`.setClasses()` literals — prefix-anchored against the derived vocab tables + the generated Tailwind root list; autofixes to the fluent chain incl. `.on()`/`.at()` wrappers for variant tokens |
+| `no-dynamic-class-argument` | error | **(v3)** Non-literal arg to `.addClass()`/`.setClass()`/`.cssClass()` — invisible to the safelist extractor; routes to `.when()`/`Match` literal branches or `staticManifest` |
+| `no-tailwind-in-cssclass` 🔧 | error | **(v3)** Tailwind-shaped token inside `.cssClass()` (the non-Tailwind intent marker) — keeps the sanctioned hatch clean |
+| `no-known-modifiers-in-setclass` 🔧 | — | **Deprecated** — superseded by `no-tailwind-in-raw-class`; no longer in the recommended preset |
 | `no-unnecessary-spaces-in-setclass` 🔧 | warn | Extra whitespace in a class string |
 | `no-duplicate-classes-in-setclass` 🔧 | warn | A class repeated in the same `.setClass()` |
 | `no-conflicting-classes-in-setclass` | warn | Mutually-exclusive classes in one `.setClass()` (incl. v4 gradient families) |
@@ -146,7 +149,24 @@ All rules are included in the `recommended` preset at the severity shown. 🔧 =
 | `no-raw-icon-string` | warn | **(v6)** `Raw("<svg…>")` icon injection → the typed SVG builders |
 | `no-fluent-equivalent-in-setstyle` | warn | Static CSS in `setStyle`/`setStyles` that a fluent method already covers (`width:44px` → `.w("px", 44)`) |
 
-## Rule: `no-known-modifiers-in-setclass`
+## Rule set: escape-hatch closure (v3)
+
+Three error-level rules close the raw-class-string hole around the typed styling surface. Every dead end states its fix inline:
+
+```
+'grid-cols-1 sm:grid-cols-2' in .addClass() bypasses the typed surface.
+Replace with: .gridCols("1").at("sm", t => t.gridCols("2")). [autofix]
+
+.addClass(colors) is invisible to the safelist extractor — styles can silently
+disappear in production. Use .when(...) / Match(...) with literal classes per
+branch, or defineTheme's staticManifest for token-driven values.
+```
+
+- **`no-tailwind-in-raw-class`** — flags a token when the derived fix table maps it, when it carries a known variant head (`hover:`, `sm:`, `[&>li]:`, …), or when it is Tailwind-shaped **and** its root is in the generated Tailwind root list (from the lib's pinned Tailwind design system). Matching is prefix-anchored, never a bare shape regex — `sidebar-backdrop`, `entry-row`, `hamburger-line` are never flagged. When every flagged token is mappable the whole call autofixes to the fluent chain, folding variant tokens into `.on()`/`.at()`.
+- **`no-dynamic-class-argument`** — non-literal args to `addClass`/`setClass`/`cssClass` (variables, ternaries, interpolated templates) are errors: the extractor records literals only, so computed classes can vanish from the production safelist with zero build signal.
+- **`no-tailwind-in-cssclass`** — `.cssClass()` (fluent-html ≥6.8.0) marks legitimately non-Tailwind classes; a Tailwind utility inside it is mis-filed and autofixes back to the typed surface.
+
+## Rule: `no-known-modifiers-in-setclass` (deprecated)
 
 Warns when `.setClass()` is called with Tailwind classes that have dedicated fluent-styling methods. **This rule is auto-fixable.**
 

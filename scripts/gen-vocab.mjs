@@ -26,6 +26,15 @@ const unitMethods = classVocab
   .sort();
 const units = [...UNITS].sort();
 
+// Tailwind utility roots from the lib's pinned design system (for the
+// no-tailwind-in-raw-class shape test — root-anchored, never a bare regex).
+const { loadDesignSystem } = await import("../../fluent-html/dist/scripts/gen-vocab/load-design-system.js");
+const { design } = await loadDesignSystem();
+const tailwindRoots = [...new Set(
+  [...design.utilities.keys("functional"), ...design.utilities.keys("static")]
+    .map((r) => r.replace(/^-/, "")),
+)].sort();
+
 const content = `// AUTO-GENERATED from fluent-html/class-vocab (C-05) by scripts/gen-vocab.mjs.
 // Do NOT edit by hand — run \`npm run gen:vocab\`. Pinned by test/vocab-drift.mjs.
 /* eslint-disable */
@@ -48,7 +57,10 @@ export const FLUENT_MODIFIERS: ReadonlySet<string> = new Set([
   "apply",
   "when",
 ]);
+
+/** Every Tailwind utility root (functional + static, negatives normalized) from the lib's pinned design system (tailwindcss oracle). */
+export const TAILWIND_ROOTS: ReadonlySet<string> = new Set(${JSON.stringify(tailwindRoots)});
 `;
 
 writeFileSync(out, content);
-console.log(`[gen-vocab] wrote ${methods.length} methods, ${unitMethods.length} unit methods, ${units.length} units → src/vocab.generated.ts`);
+console.log(`[gen-vocab] wrote ${methods.length} methods, ${unitMethods.length} unit methods, ${units.length} units, ${tailwindRoots.length} Tailwind roots → src/vocab.generated.ts`);

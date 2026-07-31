@@ -89,10 +89,12 @@ function parseVariantPrefix(className: string): { variant: string; variantMethod
 const rule: Rule.RuleModule = {
   meta: {
     type: "suggestion",
+    deprecated: true,
+    replacedBy: ["fluent-html/no-tailwind-in-raw-class"],
     docs: {
-      description: "Warn when setClass() or addClass() is used with Tailwind classes that have dedicated fluent methods",
+      description: "Warn when setClass() or addClass() is used with Tailwind classes that have dedicated fluent methods (deprecated — superseded by no-tailwind-in-raw-class)",
       category: "Best Practices",
-      recommended: true,
+      recommended: false,
     },
     fixable: "code",
     messages: {

@@ -22,6 +22,9 @@ import preferFormFor = require("./rules/prefer-form-for");
 import noRemovedV4Utilities = require("./rules/no-removed-v4-utilities");
 import noRawIconString = require("./rules/no-raw-icon-string");
 import noFluentEquivalentInSetstyle = require("./rules/no-fluent-equivalent-in-setstyle");
+import noTailwindInRawClass = require("./rules/no-tailwind-in-raw-class");
+import noDynamicClassArgument = require("./rules/no-dynamic-class-argument");
+import noTailwindInCssclass = require("./rules/no-tailwind-in-cssclass");
 
 const plugin = {
   rules: {
@@ -49,12 +52,19 @@ const plugin = {
     "no-removed-v4-utilities": noRemovedV4Utilities,
     "no-raw-icon-string": noRawIconString,
     "no-fluent-equivalent-in-setstyle": noFluentEquivalentInSetstyle,
+    "no-tailwind-in-raw-class": noTailwindInRawClass,
+    "no-dynamic-class-argument": noDynamicClassArgument,
+    "no-tailwind-in-cssclass": noTailwindInCssclass,
   },
   configs: {
     recommended: {
       plugins: ["fluent-html"],
       rules: {
-        "fluent-html/no-known-modifiers-in-setclass": "warn",
+        // Escape-hatch closure rule set (error-level, CI-blocking):
+        // no-tailwind-in-raw-class supersedes no-known-modifiers-in-setclass.
+        "fluent-html/no-tailwind-in-raw-class": "error",
+        "fluent-html/no-dynamic-class-argument": "error",
+        "fluent-html/no-tailwind-in-cssclass": "error",
         "fluent-html/no-unnecessary-spaces-in-setclass": "warn",
         "fluent-html/no-duplicate-classes-in-setclass": "warn",
         "fluent-html/no-conflicting-classes-in-setclass": "warn",

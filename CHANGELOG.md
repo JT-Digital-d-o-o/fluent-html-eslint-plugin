@@ -2,14 +2,19 @@
 
 All notable changes to `eslint-plugin-fluent-html` are documented here.
 
-## [2.1.0] - Escape-hatch gap-fill methods
+## [3.0.0] - Escape-hatch closure: CI-blocking raw-class rules
+
+The lint arm of fluent-html's `llm-styling/escape-hatch` scope (pairs with fluent-html 6.8.0).
+
+### 💥 Breaking
+
+- **`no-tailwind-in-raw-class` supersedes `no-known-modifiers-in-setclass`** in the recommended preset, at **error**. The old rule remains registered but deprecated (`replacedBy`) and is out of `recommended`. The new rule is prefix-anchored: derived fix-table exacts/prefixes, known variant heads (incl. `[&…]` arbitrary selectors), or Tailwind-shaped tokens whose root is in the generated `TAILWIND_ROOTS` list (1073 roots from the lib's pinned Tailwind design system) — so `sidebar-backdrop`/`entry-row` style custom classes are never false positives. Autofix rewrites whole calls to fluent chains, folding variant tokens into `.on()`/`.at()` (incl. nested `sm:hover:`).
+- **`no-dynamic-class-argument`** (error): non-literal args to `addClass`/`setClass`/`cssClass` — the safelist extractor records literals only, so computed classes silently vanish from production CSS. Message routes to `.when()`/`Match` literal branches or `staticManifest`.
+- **`no-tailwind-in-cssclass`** (error): the inverse guard — Tailwind utilities inside the `.cssClass()` non-Tailwind marker autofix back to the typed surface.
 
 ### ✨ Added
 
-- **Regenerated vocab tables** for fluent-html 6.8.0: `VOCAB_METHODS` now includes
-  `.appearance()`, `.wrap()`, `.content()` (200 methods; 636 derived patterns), so
-  `prefer-unit-overload` / `no-fluent-equivalent-in-setstyle` know the new surface.
-  Suggestions naming these methods apply to apps on fluent-html ≥6.8.0.
+- **Regenerated vocab tables** for fluent-html 6.8.0: `VOCAB_METHODS` now includes `.appearance()`, `.wrap()`, `.content()`, `.cssProp()` (201 methods; 636 derived patterns) + the new `TAILWIND_ROOTS` set. Suggestions naming the new methods apply to apps on fluent-html ≥6.8.0.
 
 ## [2.0.0] - Vocab-derived fix tables
 
