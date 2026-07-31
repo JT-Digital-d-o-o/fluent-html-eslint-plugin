@@ -26,29 +26,29 @@ const UNIT_PROPS: Record<string, string> = {
   left: "left",
   inset: "inset",
   gap: "gap",
-  "font-size": "textSize",
+  "font-size": "text",
   "letter-spacing": "tracking",
   "line-height": "leading",
   "text-underline-offset": "underlineOffset",
-  margin: "margin",
-  padding: "padding",
-  "margin-top": 'margin("t", …)',
-  "margin-right": 'margin("r", …)',
-  "margin-bottom": 'margin("b", …)',
-  "margin-left": 'margin("l", …)',
-  "padding-top": 'padding("t", …)',
-  "padding-right": 'padding("r", …)',
-  "padding-bottom": 'padding("b", …)',
-  "padding-left": 'padding("l", …)',
+  margin: "m",
+  padding: "p",
+  "margin-top": 'mt(…)',
+  "margin-right": 'mr(…)',
+  "margin-bottom": 'mb(…)',
+  "margin-left": 'ml(…)',
+  "padding-top": 'pt(…)',
+  "padding-right": 'pr(…)',
+  "padding-bottom": 'pb(…)',
+  "padding-left": 'pl(…)',
 };
 
 // CSS property → fluent method taking the value (or a token) directly.
 const VALUE_PROPS: Record<string, string> = {
   "white-space": "whitespace",
-  "font-weight": "fontWeight",
-  "text-align": "textAlign",
+  "font-weight": "font",
+  "text-align": "text",
   "border-radius": "rounded",
-  "z-index": "zIndex",
+  "z-index": "z",
   opacity: "opacity",
   cursor: "cursor",
   overflow: "overflow",
@@ -59,10 +59,10 @@ const VALUE_PROPS: Record<string, string> = {
 // CSS property → fluent color method; flagged only for plain hex / white / black / transparent
 // (rgba(), color-mix(), gradients are skipped by the functional-value rule).
 const COLOR_PROPS: Record<string, string> = {
-  color: "textColor",
-  background: "background",
-  "background-color": "background",
-  "border-color": "borderColor",
+  color: "text",
+  background: "bg",
+  "background-color": "bg",
+  "border-color": "border",
 };
 
 // display / position keyword values → dedicated fluent methods.

@@ -55,29 +55,42 @@ check("display statics map to dedicated shortcuts, not .display()", () => {
 check("flex-1 maps to .flex('1'), not dead .flex1()", () => {
   assert.deepEqual({ m: exact("flex-1")?.methodName, v: exact("flex-1")?.fixedValue }, { m: "flex", v: "1" });
 });
-check("previously missing methods are covered (shadowColor/fontFamily/group)", () => {
-  assert.equal(prefix("shadow-")?.methodName, "shadowColor");
-  assert.equal(exact("font-sans")?.methodName, "fontFamily");
+check("shadow/font/group families are covered by the merged canonical methods", () => {
+  assert.equal(prefix("shadow-")?.methodName, "shadow");
+  assert.equal(exact("font-sans")?.methodName, "font");
   assert.equal(exact("group")?.methodName, "group");
   assert.equal(prefix("group/")?.methodName, "group");
 });
 
-// ── Residue disambiguation ──────────────────────────────────────────
-check("width/size exacts carve out shared color prefixes", () => {
+// ── Canonical-names merges: one method per prefix, exacts keep fixedValue ──
+check("merged width|color prefixes resolve to the one canonical method", () => {
   assert.equal(exact("ring-2")?.methodName, "ring");
-  assert.equal(prefix("ring-")?.methodName, "ringColor");
-  assert.equal(exact("stroke-2")?.methodName, "strokeWidth");
-  assert.equal(prefix("stroke-")?.methodName, "strokeColor");
+  assert.equal(prefix("ring-")?.methodName, "ring");
+  assert.equal(exact("stroke-2")?.methodName, "stroke");
+  assert.equal(prefix("stroke-")?.methodName, "stroke");
   assert.equal(exact("text-shadow-md")?.methodName, "textShadow");
-  assert.equal(prefix("text-shadow-")?.methodName, "textShadowColor");
+  assert.equal(prefix("text-shadow-")?.methodName, "textShadow");
 });
-check("font-bold prefers the dedicated .bold()", () => {
-  assert.equal(exact("font-bold")?.methodName, "bold");
-  assert.equal(exact("font-semibold")?.methodName, "fontWeight");
+check("font weights derive from the merged .font() weight group", () => {
+  assert.deepEqual({ m: exact("font-bold")?.methodName, v: exact("font-bold")?.fixedValue }, { m: "font", v: "bold" });
+  assert.equal(exact("font-semibold")?.methodName, "font");
 });
-check("bg-linear keyword directions are exact; the rest is an angle", () => {
-  assert.deepEqual({ m: exact("bg-linear-to-br")?.methodName, v: exact("bg-linear-to-br")?.fixedValue }, { m: "gradientTo", v: "to-br" });
-  assert.equal(prefix("bg-linear-")?.methodName, "gradientLinear");
+check("directional shorthands own their prefixes (px-4 → .px(), not .p('x', …))", () => {
+  assert.equal(prefix("px-")?.methodName, "px");
+  assert.equal(prefix("mt-")?.methodName, "mt");
+  assert.equal(prefix("p-")?.methodName, "p");
+  assert.equal(prefix("m-")?.methodName, "m");
+});
+check("bg-linear keyword directions are exact; the rest is an angle — both .bgLinear()", () => {
+  assert.deepEqual({ m: exact("bg-linear-to-br")?.methodName, v: exact("bg-linear-to-br")?.fixedValue }, { m: "bgLinear", v: "to-br" });
+  assert.equal(prefix("bg-linear-")?.methodName, "bgLinear");
+});
+check("merged border/list/mask families fix to the canonical method", () => {
+  assert.deepEqual({ m: exact("border-dashed")?.methodName, v: exact("border-dashed")?.fixedValue }, { m: "border", v: "dashed" });
+  assert.equal(prefix("border-")?.methodName, "border");
+  assert.deepEqual({ m: exact("list-disc")?.methodName, v: exact("list-disc")?.fixedValue }, { m: "list", v: "disc" });
+  assert.deepEqual({ m: exact("mask-add")?.methodName, v: exact("mask-add")?.fixedValue }, { m: "mask", v: "add" });
+  assert.deepEqual({ m: exact("outline-hidden")?.methodName, v: exact("outline-hidden")?.fixedValue }, { m: "outline", v: "hidden" });
 });
 check("modifier map renders two-arg exacts", () => {
   assert.equal(modifierMap["overflow-x-auto"], "overflow('x', 'auto')");
@@ -92,9 +105,9 @@ check("autofixes through the derived table", () => {
       { code: `Div().setClass("absolute")`, output: `Div().absolute()`, errors: 1 },
       { code: `Div().setClass("flex-1")`, output: `Div().flex("1")`, errors: 1 },
       { code: `Div().setClass("overflow-x-auto")`, output: `Div().overflow("x", "auto")`, errors: 1 },
-      { code: `Div().setClass("text-white")`, output: `Div().textColor("white")`, errors: 1 },
-      { code: `Div().setClass("stroke-red-500")`, output: `Div().strokeColor("red-500")`, errors: 1 },
-      { code: `Div().setClass("decoration-wavy")`, output: `Div().decorationStyle("wavy")`, errors: 1 },
+      { code: `Div().setClass("text-white")`, output: `Div().text("white")`, errors: 1 },
+      { code: `Div().setClass("stroke-red-500")`, output: `Div().stroke("red-500")`, errors: 1 },
+      { code: `Div().setClass("decoration-wavy")`, output: `Div().decoration("wavy")`, errors: 1 },
       { code: `Div().setClass("translate-x-2")`, output: `Div().translate("x", "2")`, errors: 1 },
       { code: `Div().setClass("snap-align-none")`, output: `Div().snapAlign("none")`, errors: 1 },
       { code: `Div().setClass("scale-3d rotate-x-45")`, output: `Div().scale3d().rotateX("45")`, errors: 2 },

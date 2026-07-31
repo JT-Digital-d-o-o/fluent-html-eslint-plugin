@@ -58,8 +58,8 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
     {
       code: `Div().addClass("bg-grid bg-red-500")`,
       options: [{ ignoredClasses: ["bg-grid"] }],
-      output: `Div().background("red-500").addClass("bg-grid")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "bg-red-500", method: "background()" } }],
+      output: `Div().bg("red-500").addClass("bg-grid")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "bg-red-500", method: "bg()" } }],
     },
     // flex-shrink-0 should suggest shrink("0"), not flex()
     {
@@ -73,11 +73,11 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
       output: `Div().grow("0")`,
       errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "flex-grow-0", method: "grow('0')" } }],
     },
-    // font-mono → .fontFamily("mono")
+    // font-mono → .font("mono")
     {
       code: `Div().addClass("font-mono")`,
-      output: `Div().fontFamily("mono")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "font-mono", method: "fontFamily('mono')" } }],
+      output: `Div().font("mono")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "font-mono", method: "font('mono')" } }],
     },
     // gradient from/via/to
     {
@@ -94,8 +94,8 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
     // shadow color (not shadow size)
     {
       code: `Div().addClass("shadow-coral/30")`,
-      output: `Div().shadowColor("coral/30")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "shadow-coral/30", method: "shadowColor()" } }],
+      output: `Div().shadow("coral/30")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "shadow-coral/30", method: "shadow()" } }],
     },
     // shadow-md still maps to .shadow("md") — exact match takes priority
     {
@@ -142,13 +142,13 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
     // addClass with single base utility
     {
       code: `Div().addClass("mt-2")`,
-      output: `Div().margin("t", "2")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "mt-2", method: "margin('t', ...)" } }],
+      output: `Div().mt("2")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "mt-2", method: "mt()" } }],
     },
     // addClass with variant prefix — suggest .on()
     {
       code: `Div().addClass("hover:bg-blue-600")`,
-      errors: [{ messageId: "useVariantMethod", data: { callee: "addClass", className: "hover:bg-blue-600", variantMethod: "on", variant: "hover", method: "background()" } }],
+      errors: [{ messageId: "useVariantMethod", data: { callee: "addClass", className: "hover:bg-blue-600", variantMethod: "on", variant: "hover", method: "bg()" } }],
     },
     // addClass with responsive prefix — suggest .at()
     {
@@ -159,17 +159,17 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
     {
       code: `Div().addClass("hover:bg-blue-600 focus:ring-2")`,
       errors: [
-        { messageId: "useVariantMethod", data: { callee: "addClass", className: "hover:bg-blue-600", variantMethod: "on", variant: "hover", method: "background()" } },
+        { messageId: "useVariantMethod", data: { callee: "addClass", className: "hover:bg-blue-600", variantMethod: "on", variant: "hover", method: "bg()" } },
         { messageId: "useVariantMethod", data: { callee: "addClass", className: "focus:ring-2", variantMethod: "on", variant: "focus", method: "ring('2')" } },
       ],
     },
     // addClass with base utility + modifier-prefixed class — keeps modifier class in addClass
     {
       code: `Div().addClass("p-4 hover:bg-blue-600")`,
-      output: `Div().padding("4").addClass("hover:bg-blue-600")`,
+      output: `Div().p("4").addClass("hover:bg-blue-600")`,
       errors: [
-        { messageId: "useKnownModifier", data: { callee: "addClass", className: "p-4", method: "padding()" } },
-        { messageId: "useVariantMethod", data: { callee: "addClass", className: "hover:bg-blue-600", variantMethod: "on", variant: "hover", method: "background()" } },
+        { messageId: "useKnownModifier", data: { callee: "addClass", className: "p-4", method: "p()" } },
+        { messageId: "useVariantMethod", data: { callee: "addClass", className: "hover:bg-blue-600", variantMethod: "on", variant: "hover", method: "bg()" } },
       ],
     },
     // addClass with unknown base class but known variant — still caught
@@ -180,63 +180,63 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
     // addClass with multiple base utilities
     {
       code: `Div().addClass("mt-2 p-4")`,
-      output: `Div().margin("t", "2").padding("4")`,
+      output: `Div().mt("2").p("4")`,
       errors: [
-        { messageId: "useKnownModifier", data: { callee: "addClass", className: "mt-2", method: "margin('t', ...)" } },
-        { messageId: "useKnownModifier", data: { callee: "addClass", className: "p-4", method: "padding()" } },
+        { messageId: "useKnownModifier", data: { callee: "addClass", className: "mt-2", method: "mt()" } },
+        { messageId: "useKnownModifier", data: { callee: "addClass", className: "p-4", method: "p()" } },
       ],
     },
     // setClass still works (regression check)
     {
       code: `Div().setClass("mt-2")`,
-      output: `Div().margin("t", "2")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "setClass", className: "mt-2", method: "margin('t', ...)" } }],
+      output: `Div().mt("2")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "setClass", className: "mt-2", method: "mt()" } }],
     },
     // setClasses with a string literal element that has a known modifier
     {
       code: `Div().setClasses(["p-4", isActive && "active"])`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "setClasses", className: "p-4", method: "padding()" } }],
+      errors: [{ messageId: "useKnownModifier", data: { callee: "setClasses", className: "p-4", method: "p()" } }],
     },
     // setClasses with multiple known modifiers
     {
       code: `Div().setClasses(["mt-2", "rounded"])`,
       errors: [
-        { messageId: "useKnownModifier", data: { callee: "setClasses", className: "mt-2", method: "margin('t', ...)" } },
+        { messageId: "useKnownModifier", data: { callee: "setClasses", className: "mt-2", method: "mt()" } },
         { messageId: "useKnownModifier", data: { callee: "setClasses", className: "rounded", method: "rounded()" } },
       ],
     },
     // addClass with list-disc
     {
       code: `Div().addClass("list-disc")`,
-      output: `Div().listStyleType("disc")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "list-disc", method: "listStyleType('disc')" } }],
+      output: `Div().list("disc")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "list-disc", method: "list('disc')" } }],
     },
     // addClass with list-inside
     {
       code: `Div().addClass("list-inside")`,
-      output: `Div().listStylePosition("inside")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "list-inside", method: "listStylePosition('inside')" } }],
+      output: `Div().list("inside")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "list-inside", method: "list('inside')" } }],
     },
     // addClass with list-disc list-inside combined
     {
       code: `Div().addClass("list-disc list-inside")`,
-      output: `Div().listStyleType("disc").listStylePosition("inside")`,
+      output: `Div().list("disc").list("inside")`,
       errors: [
-        { messageId: "useKnownModifier", data: { callee: "addClass", className: "list-disc", method: "listStyleType('disc')" } },
-        { messageId: "useKnownModifier", data: { callee: "addClass", className: "list-inside", method: "listStylePosition('inside')" } },
+        { messageId: "useKnownModifier", data: { callee: "addClass", className: "list-disc", method: "list('disc')" } },
+        { messageId: "useKnownModifier", data: { callee: "addClass", className: "list-inside", method: "list('inside')" } },
       ],
     },
     // addClass with list-none
     {
       code: `Div().addClass("list-none")`,
-      output: `Div().listStyleType("none")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "list-none", method: "listStyleType('none')" } }],
+      output: `Div().list("none")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "list-none", method: "list('none')" } }],
     },
     // addClass with list-decimal
     {
       code: `Div().addClass("list-decimal")`,
-      output: `Div().listStyleType("decimal")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "list-decimal", method: "listStyleType('decimal')" } }],
+      output: `Div().list("decimal")`,
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "list-decimal", method: "list('decimal')" } }],
     },
   ],
 });
@@ -332,8 +332,8 @@ runSuite("no-setclass-after-fluent-modifier (apply/when)", noSetclassAfterFluent
     },
     // setClass after apply + other modifiers
     {
-      code: `Div("x").apply(t => t.addClass("a")).padding("4").setClass("override")`,
-      errors: [{ messageId: "setClassAfterModifier", data: { modifier: "padding", method: "setClass" } }],
+      code: `Div("x").apply(t => t.addClass("a")).p("4").setClass("override")`,
+      errors: [{ messageId: "setClassAfterModifier", data: { modifier: "p", method: "setClass" } }],
     },
     // setClasses after apply() — same problem
     {
@@ -342,8 +342,8 @@ runSuite("no-setclass-after-fluent-modifier (apply/when)", noSetclassAfterFluent
     },
     // setClasses after padding()
     {
-      code: `Div("x").padding("4").setClasses(["override"])`,
-      errors: [{ messageId: "setClassAfterModifier", data: { modifier: "padding", method: "setClasses" } }],
+      code: `Div("x").p("4").setClasses(["override"])`,
+      errors: [{ messageId: "setClassAfterModifier", data: { modifier: "p", method: "setClasses" } }],
     },
   ],
 });
@@ -764,7 +764,7 @@ runSuite("no-ternary-in-view-builder", noTernaryInViewBuilder, {
     },
     // Chained view element in ternary
     {
-      code: `Div(isAdmin ? Span("Admin").bold() : Span("User"))`,
+      code: `Div(isAdmin ? Span("Admin").font("bold") : Span("User"))`,
       errors: [{ messageId: "noTernaryInViewBuilder", data: { name: "Div" } }],
     },
   ],
@@ -793,7 +793,7 @@ runSuite("anchor-requires-cursor-pointer", anchorRequiresCursorPointer, {
     // Not an anchor — no warning
     { code: `Button("Go").setHref("/page")` },
     // A() with cursor("pointer") deep in chain
-    { code: `A("Click").setHref("/page").setClass("text-blue-500").cursor("pointer").padding("4")` },
+    { code: `A("Click").setHref("/page").setClass("text-blue-500").cursor("pointer").p("4")` },
   ],
   invalid: [
     // A() without cursor
@@ -822,8 +822,8 @@ runSuite("anchor-requires-cursor-pointer", anchorRequiresCursorPointer, {
     },
     // A() with children and chaining but no cursor
     {
-      code: `A("Click", Span("icon")).setHref("/page").padding("4")`,
-      output: `A("Click", Span("icon")).setHref("/page").padding("4").cursor("pointer")`,
+      code: `A("Click", Span("icon")).setHref("/page").p("4")`,
+      output: `A("Click", Span("icon")).setHref("/page").p("4").cursor("pointer")`,
       errors: [{ messageId: "missingCursorPointer" }],
     },
   ],
@@ -907,16 +907,16 @@ runSuite("prefer-unit-overload", preferUnitOverload, {
     // Named Tailwind values — no warning
     { code: `Div().w("full")` },
     { code: `Div().minH("screen")` },
-    { code: `Div().padding("4")` },
+    { code: `Div().p("4")` },
     { code: `Div().gap("x", "2")` },
     { code: `Div().top("0")` },
     // Already using unit overload — no warning
     { code: `Div().w("px", 200)` },
     { code: `Div().minH("rem", 12)` },
-    { code: `Div().padding("em", 1.5)` },
+    { code: `Div().p("em", 1.5)` },
     // Bracket values on non-unit methods (opacity/zIndex have no unit overload) — not our concern
     { code: `Div().opacity("[0.33]")` },
-    { code: `Div().zIndex("[999]")` },
+    { code: `Div().z("[999]")` },
     // Bracket values without a recognized CSS unit
     { code: `Div().w("[calc(100%-2rem)]")` },
     { code: `Div().h("[var(--height)]")` },
@@ -935,9 +935,9 @@ runSuite("prefer-unit-overload", preferUnitOverload, {
     },
     // Scalar unit methods (F-C-160) — textSize now has the unit overload
     {
-      code: `Div().textSize("[13px]")`,
-      output: `Div().textSize("px", 13)`,
-      errors: [{ messageId: "preferUnitOverload", data: { method: "textSize", unit: "px", amount: "13", raw: "[13px]" } }],
+      code: `Div().text("[13px]")`,
+      output: `Div().text("px", 13)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "text", unit: "px", amount: "13", raw: "[13px]" } }],
     },
     {
       code: `Div().h("[100vh]")`,
@@ -966,14 +966,14 @@ runSuite("prefer-unit-overload", preferUnitOverload, {
     },
     // Spacing
     {
-      code: `Div().padding("[16px]")`,
-      output: `Div().padding("px", 16)`,
-      errors: [{ messageId: "preferUnitOverload", data: { method: "padding", unit: "px", amount: "16", raw: "[16px]" } }],
+      code: `Div().p("[16px]")`,
+      output: `Div().p("px", 16)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "p", unit: "px", amount: "16", raw: "[16px]" } }],
     },
     {
-      code: `Div().margin("[1.5rem]")`,
-      output: `Div().margin("rem", 1.5)`,
-      errors: [{ messageId: "preferUnitOverload", data: { method: "margin", unit: "rem", amount: "1.5", raw: "[1.5rem]" } }],
+      code: `Div().m("[1.5rem]")`,
+      output: `Div().m("rem", 1.5)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "m", unit: "rem", amount: "1.5", raw: "[1.5rem]" } }],
     },
     {
       code: `Div().gap("[8px]")`,
@@ -1008,9 +1008,9 @@ runSuite("prefer-unit-overload", preferUnitOverload, {
     },
     // Decimal values
     {
-      code: `Div().padding("[0.75rem]")`,
-      output: `Div().padding("rem", 0.75)`,
-      errors: [{ messageId: "preferUnitOverload", data: { method: "padding", unit: "rem", amount: "0.75", raw: "[0.75rem]" } }],
+      code: `Div().p("[0.75rem]")`,
+      output: `Div().p("rem", 0.75)`,
+      errors: [{ messageId: "preferUnitOverload", data: { method: "p", unit: "rem", amount: "0.75", raw: "[0.75rem]" } }],
     },
     // All unit types
     {
@@ -1030,8 +1030,8 @@ runSuite("prefer-unit-overload", preferUnitOverload, {
     },
     // In a chain
     {
-      code: `Div().padding("4").w("[200px]").background("white")`,
-      output: `Div().padding("4").w("px", 200).background("white")`,
+      code: `Div().p("4").w("[200px]").bg("white")`,
+      output: `Div().p("4").w("px", 200).bg("white")`,
       errors: [{ messageId: "preferUnitOverload" }],
     },
   ],
@@ -1172,7 +1172,7 @@ runSuite("no-removed-v4-utilities", noRemovedV4Utilities, {
     // non-opacity utilities
     { code: `Div().setClass("bg-red-500 p-4 opacity-50")` },
     // method-call colors are untouched (rule only scans setClass/addClass strings)
-    { code: `Div().background("black/50")` },
+    { code: `Div().bg("black/50")` },
   ],
   invalid: [
     {
@@ -1295,7 +1295,7 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     },
     {
       code: `Div().setStyle("font-size:1.9rem")`,
-      errors: [{ messageId: "useFluentEquivalent", data: { decl: "font-size: 1.9rem", suggestion: '.textSize("rem", 1.9)' } }],
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "font-size: 1.9rem", suggestion: '.text("rem", 1.9)' } }],
     },
     {
       code: `Div().setStyle("letter-spacing:0.13em;line-height:1.6")`,
@@ -1312,11 +1312,11 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     // plain colors → theme token
     {
       code: `Div().setStyle("color:#FDB813")`,
-      errors: [{ messageId: "useFluentEquivalent", data: { decl: "color: #FDB813", suggestion: ".textColor(…) with a theme token" } }],
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "color: #FDB813", suggestion: ".text(…) with a theme token" } }],
     },
     {
       code: `Div().setStyle("background:#fff")`,
-      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background: #fff", suggestion: ".background(…) with a theme token" } }],
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background: #fff", suggestion: ".bg(…) with a theme token" } }],
     },
     // keyword props
     {
@@ -1333,21 +1333,21 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     // multi-value shorthand
     {
       code: `Div().setStyle("padding:26px 24px 24px 28px")`,
-      errors: [{ messageId: "useFluentEquivalent", data: { decl: "padding: 26px 24px 24px 28px", suggestion: ".padding(…) per side" } }],
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "padding: 26px 24px 24px 28px", suggestion: ".p(…) per side" } }],
     },
     // setStyles object form: camelCase keys
     {
       code: `Div().setStyles({ fontSize: "14px", textAlign: "center" })`,
       errors: [
-        { messageId: "useFluentEquivalent", data: { decl: "font-size: 14px", suggestion: '.textSize("px", 14)' } },
-        { messageId: "useFluentEquivalent", data: { decl: "text-align: center", suggestion: ".textAlign(…)" } },
+        { messageId: "useFluentEquivalent", data: { decl: "font-size: 14px", suggestion: '.text("px", 14)' } },
+        { messageId: "useFluentEquivalent", data: { decl: "text-align: center", suggestion: ".text(…)" } },
       ],
     },
     {
       code: `Div().setStyles({ margin: "24px 0", zIndex: 999 })`,
       errors: [
-        { messageId: "useFluentEquivalent", data: { decl: "margin: 24px 0", suggestion: ".margin(…) per side" } },
-        { messageId: "useFluentEquivalent", data: { decl: "z-index: 999", suggestion: ".zIndex(…)" } },
+        { messageId: "useFluentEquivalent", data: { decl: "margin: 24px 0", suggestion: ".m(…) per side" } },
+        { messageId: "useFluentEquivalent", data: { decl: "z-index: 999", suggestion: ".z(…)" } },
       ],
     },
   ],
@@ -1398,18 +1398,18 @@ runSuite("no-tailwind-in-raw-class", noTailwindInRawClass, {
     // state variant → .on(); multi-level variants nest
     {
       code: `Div().addClass("hover:bg-blue-600")`,
-      output: `Div().on("hover", t => t.background("blue-600"))`,
+      output: `Div().on("hover", t => t.bg("blue-600"))`,
       errors: [{ messageId: "replaceWith" }],
     },
     {
       code: `Div().addClass("sm:hover:bg-blue-600")`,
-      output: `Div().at("sm", t => t.on("hover", t1 => t1.background("blue-600")))`,
+      output: `Div().at("sm", t => t.on("hover", t1 => t1.bg("blue-600")))`,
       errors: [{ messageId: "replaceWith" }],
     },
     // unknown-but-Tailwind-shaped with a real root (PRD: shadow-violet-500/40)
     {
       code: `Div().addClass("shadow-violet-500/40")`,
-      output: `Div().shadowColor("violet-500/40")`,
+      output: `Div().shadow("violet-500/40")`,
       errors: [{ messageId: "replaceWith" }],
     },
     // Tailwind root with no fluent method → routes to .cssProp / vocab gap
@@ -1420,13 +1420,13 @@ runSuite("no-tailwind-in-raw-class", noTailwindInRawClass, {
     // mixed literal: mappable tokens rewritten, non-Tailwind kept in the call
     {
       code: `Div().addClass("p-4 sidebar-backdrop")`,
-      output: `Div().padding("4").addClass("sidebar-backdrop")`,
+      output: `Div().p("4").addClass("sidebar-backdrop")`,
       errors: [{ messageId: "replaceWith" }],
     },
     // setClass flagged identically
     {
       code: `Div().setClass("flex items-center gap-4")`,
-      output: `Div().flex().alignItems("center").gap("4")`,
+      output: `Div().flex().items("center").gap("4")`,
       errors: [
         { messageId: "replaceWith" },
         { messageId: "replaceWith" },
@@ -1436,7 +1436,7 @@ runSuite("no-tailwind-in-raw-class", noTailwindInRawClass, {
     // arbitrary-selector variant head is recognized
     {
       code: `Div().addClass("[&>li]:p-2")`,
-      output: `Div().on("[&>li]", t => t.padding("2"))`,
+      output: `Div().on("[&>li]", t => t.p("2"))`,
       errors: [{ messageId: "replaceWith" }],
     },
     // setClasses array elements are analyzed (no autofix)
@@ -1490,19 +1490,19 @@ runSuite("no-tailwind-in-cssclass", noTailwindInCssclass, {
   invalid: [
     {
       code: `Div().cssClass("p-4")`,
-      output: `Div().padding("4")`,
-      errors: [{ messageId: "tailwindInCssClass", data: { className: "p-4", fluentChain: `.padding("4")` } }],
+      output: `Div().p("4")`,
+      errors: [{ messageId: "tailwindInCssClass", data: { className: "p-4", fluentChain: `.p("4")` } }],
     },
     // mixed: utility extracted, legit hook kept
     {
       code: `Div().cssClass("js-hook bg-red-500")`,
-      output: `Div().background("red-500").cssClass("js-hook")`,
+      output: `Div().bg("red-500").cssClass("js-hook")`,
       errors: [{ messageId: "tailwindInCssClass" }],
     },
     // variant token is Tailwind by its head
     {
       code: `Div().cssClass("hover:bg-blue-600")`,
-      output: `Div().on("hover", t => t.background("blue-600"))`,
+      output: `Div().on("hover", t => t.bg("blue-600"))`,
       errors: [{ messageId: "tailwindInCssClass" }],
     },
   ],

@@ -1,7 +1,7 @@
 import { Rule } from "eslint";
 
 // Utilities removed in Tailwind v4. The `*-opacity-*` family is replaced by the
-// slash opacity modifier (`bg-black/50`, i.e. `.background("black/50")`).
+// slash opacity modifier (`bg-black/50`, i.e. `.bg("black/50")`).
 const REMOVED_OPACITY_RE = /^(bg|text|border|ring|divide|placeholder)-opacity-(\d+)$/;
 const VARIANT_PREFIX_RE = /^(?:[\w-]+:)+/;
 
@@ -15,7 +15,7 @@ const rule: Rule.RuleModule = {
     },
     messages: {
       removedOpacity:
-        "`{{cls}}` was removed in Tailwind v4 — use the slash opacity modifier `{{util}}-<color>/{{amount}}` (e.g. `.background(\"black/{{amount}}\")`).",
+        "`{{cls}}` was removed in Tailwind v4 — use the slash opacity modifier `{{util}}-<color>/{{amount}}` (e.g. `.bg(\"black/{{amount}}\")`).",
     },
     schema: [],
   },

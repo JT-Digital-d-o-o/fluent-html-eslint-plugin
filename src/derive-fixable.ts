@@ -43,33 +43,23 @@ export interface FixablePattern {
 // ── Disambiguation residue (hand-kept) ──────────────────────────────
 
 /**
- * Same emitted class claimed by two vocab rows — the dedicated shortcut wins
- * (`font-bold` is both `bold()` and `fontWeight("bold")`).
+ * Same emitted class claimed by two vocab rows — the dedicated shortcut wins.
+ * Empty since canonical-names deleted the duplicate methods (`bold()` et al.);
+ * the mechanism stays for future carve-outs.
  */
-const PREFERRED_EXACTS: Readonly<Record<string, { methodName: string; fixedValue?: string }>> = {
-  "font-bold": { methodName: "bold" },
-};
+const PREFERRED_EXACTS: Readonly<Record<string, { methodName: string; fixedValue?: string }>> = {};
 
 /**
  * Catch-all owner for a class prefix claimed by more than one vocab row (or by
  * custom rows the derivation cannot see). Applied AFTER every exact, so the
  * residue exacts below carve out widths/sizes first. `null` = exacts only.
+ * Canonical-names shrank this table: the merges leave one method per prefix,
+ * so only the directional-shorthand overlaps (`px-` is both `.p("x", …)` and
+ * `.px(…)` — the shorthand is the canonical fix) and `snap-` remain.
  */
 const RESIDUE_PREFIX_OWNERS: Readonly<Record<string, string | null>> = {
-  "text-": "textColor",           // alignment/wrap/size exacts first; colors are the long tail
-  "font-": "fontFamily",          // weight exacts first; custom font tokens are families
-  "flex-": "flexShorthand",       // direction/wrap/keyword exacts first; flex-2 etc. remain
-  "border-": "borderColor",       // width/side/style exacts first
-  "ring-": "ringColor",           // width exacts first
-  "shadow-": "shadowColor",       // size exacts first
-  "list-": null,                  // type/position literals cover everything
-  "transition-": "transition",    // behavior literals (normal/discrete) exact first
-  "decoration-": "decorationColor", // style literals + thickness exacts first
-  "text-shadow-": "textShadowColor",
-  "drop-shadow-": "dropShadowColor",
-  "inset-shadow-": "insetShadowColor",
-  "inset-ring-": "insetRingColor",
-  "stroke-": "strokeColor",       // stroke-0/1/2 width exacts first
+  "px-": "px", "py-": "py", "pt-": "pt", "pb-": "pb", "pl-": "pl", "pr-": "pr",
+  "mx-": "mx", "my-": "my", "mt-": "mt", "mb-": "mb", "ml-": "ml", "mr-": "mr",
   "snap-": null,                  // axis/strictness args don't fit value extraction
 };
 
@@ -81,23 +71,25 @@ const RESIDUE_EXACTS: readonly FixablePattern[] = [
   ...["t", "b", "l", "r", "x", "y"].map((v) => ({ pattern: `border-${v}`, methodName: "border", exactMatch: true, fixedValue: v })),
   // rounded (custom row): bare (sizes/corners flow through the prefix residue)
   { pattern: "rounded", methodName: "rounded", exactMatch: true },
-  // widths on shared color prefixes
+  // widths on the merged width|color prefixes (typeRef arms — not literals rows)
   ...["0", "1", "2", "3", "4", "8"].map((v) => ({ pattern: `ring-${v}`, methodName: "ring", exactMatch: true, fixedValue: v })),
   ...["0", "1", "2", "4", "8"].map((v) => ({ pattern: `inset-ring-${v}`, methodName: "insetRing", exactMatch: true, fixedValue: v })),
-  ...["0", "1", "2"].map((v) => ({ pattern: `stroke-${v}`, methodName: "strokeWidth", exactMatch: true, fixedValue: v })),
-  ...["0", "1", "2", "4", "8", "auto", "from-font"].map((v) => ({ pattern: `decoration-${v}`, methodName: "decorationThickness", exactMatch: true, fixedValue: v })),
-  // sizes on shared color prefixes (theme-ns families — not literals rows)
+  ...["0", "1", "2"].map((v) => ({ pattern: `stroke-${v}`, methodName: "stroke", exactMatch: true, fixedValue: v })),
+  ...["0", "1", "2", "4", "8", "auto", "from-font"].map((v) => ({ pattern: `decoration-${v}`, methodName: "decoration", exactMatch: true, fixedValue: v })),
+  // sizes on the merged size|color prefixes (theme-ns families — not literals rows)
   ...["2xs", "xs", "sm", "md", "lg", "xl", "2xl", "inner", "none"].map((v) => ({ pattern: `shadow-${v}`, methodName: "shadow", exactMatch: true, fixedValue: v })),
   ...["2xs", "xs", "sm", "md", "lg", "none"].map((v) => ({ pattern: `text-shadow-${v}`, methodName: "textShadow", exactMatch: true, fixedValue: v })),
   ...["xs", "sm", "md", "lg", "xl", "2xl", "none"].map((v) => ({ pattern: `drop-shadow-${v}`, methodName: "dropShadow", exactMatch: true, fixedValue: v })),
   ...["2xs", "xs", "sm", "none"].map((v) => ({ pattern: `inset-shadow-${v}`, methodName: "insetShadow", exactMatch: true, fixedValue: v })),
   // text sizes (theme-ns --text)
-  ...["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl", "7xl", "8xl", "9xl"].map((v) => ({ pattern: `text-${v}`, methodName: "textSize", exactMatch: true, fixedValue: v })),
+  ...["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl", "7xl", "8xl", "9xl"].map((v) => ({ pattern: `text-${v}`, methodName: "text", exactMatch: true, fixedValue: v })),
   // font families (theme-ns --font)
-  ...["sans", "serif", "mono"].map((v) => ({ pattern: `font-${v}`, methodName: "fontFamily", exactMatch: true, fixedValue: v })),
+  ...["sans", "serif", "mono"].map((v) => ({ pattern: `font-${v}`, methodName: "font", exactMatch: true, fixedValue: v })),
+  // mask image arm (custom row; the composite literals derive from the group)
+  { pattern: "mask-none", methodName: "mask", exactMatch: true, fixedValue: "none" },
   // bare radial/conic gradients (custom rows)
-  { pattern: "bg-radial", methodName: "gradientRadial", exactMatch: true },
-  { pattern: "bg-conic", methodName: "gradientConic", exactMatch: true },
+  { pattern: "bg-radial", methodName: "bgRadial", exactMatch: true },
+  { pattern: "bg-conic", methodName: "bgConic", exactMatch: true },
   // v3 legacy spellings — still worth an autofix to the v4 method
   { pattern: "flex-shrink-0", methodName: "shrink", exactMatch: true, fixedValue: "0" },
   { pattern: "flex-shrink", methodName: "shrink", exactMatch: true },
@@ -107,14 +99,16 @@ const RESIDUE_EXACTS: readonly FixablePattern[] = [
 
 /** Prefix patterns the derivation cannot see (custom rows + legacy). */
 const RESIDUE_PREFIXES: readonly FixablePattern[] = [
+  // border (custom row): colors + custom color tokens after the exact carve-outs
+  { pattern: "border-", methodName: "border" },
   { pattern: "rounded-", methodName: "rounded" },
   { pattern: "from-", methodName: "from" },
   { pattern: "via-", methodName: "via" },
   { pattern: "to-", methodName: "to" },
-  // bg-linear-to-* keyword exacts derive from gradientTo's literals; what
+  // bg-linear-to-* keyword exacts derive from bgLinear's direction group; what
   // remains under bg-linear- is an angle. bg-gradient- is the v3 spelling.
-  { pattern: "bg-linear-", methodName: "gradientLinear" },
-  { pattern: "bg-gradient-", methodName: "gradientTo" },
+  { pattern: "bg-linear-", methodName: "bgLinear" },
+  { pattern: "bg-gradient-", methodName: "bgLinear" },
   { pattern: "translate-x-", methodName: "translate", direction: "x" },
   { pattern: "translate-y-", methodName: "translate", direction: "y" },
   { pattern: "rotate-x-", methodName: "rotateX" },
@@ -186,15 +180,25 @@ function deriveExacts(vocab: ClassVocabModule): FixablePattern[] {
     if (emit.kind === "optional") {
       claim({ pattern: emit.prefix, methodName: def.method, exactMatch: true });
     }
-    if (def.values?.kind !== "literals") continue;
-    for (const member of def.values.list) {
-      for (const cls of vocab.emitClasses(emit, [member])) {
-        claim({ pattern: cls, methodName: def.method, exactMatch: true, fixedValue: member });
+    // Flat literals rows contribute one list; merged methods (canonical-names)
+    // contribute one list per literals group — all through the row's own emit fn.
+    const lists: (readonly string[])[] = [];
+    if (def.values?.kind === "literals") lists.push(def.values.list);
+    if (def.values?.kind === "group") {
+      for (const spec of Object.values(def.values.groups)) {
+        if (spec.kind === "literals") lists.push(spec.list);
       }
-      if (emit.kind === "spacing") {
-        for (const dir of spacingDirs(emit.abbrev)) {
-          for (const cls of vocab.emitClasses(emit, [dir, member])) {
-            claim({ pattern: cls, methodName: def.method, exactMatch: true, direction: dir, fixedValue: member });
+    }
+    for (const list of lists) {
+      for (const member of list) {
+        for (const cls of vocab.emitClasses(emit, [member])) {
+          claim({ pattern: cls, methodName: def.method, exactMatch: true, fixedValue: member });
+        }
+        if (emit.kind === "spacing") {
+          for (const dir of spacingDirs(emit.abbrev)) {
+            for (const cls of vocab.emitClasses(emit, [dir, member])) {
+              claim({ pattern: cls, methodName: def.method, exactMatch: true, direction: dir, fixedValue: member });
+            }
           }
         }
       }

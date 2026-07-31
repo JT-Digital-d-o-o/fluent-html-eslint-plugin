@@ -2,6 +2,20 @@
 
 All notable changes to `eslint-plugin-fluent-html` are documented here.
 
+## [Unreleased — 4.0.0] - Canonical names: fixes target the renamed/merged surface
+
+The lint arm of fluent-html's `llm-styling/canonical-names` (pairs with fluent-html 7.0.0; peer bump lands with the release).
+
+### 💥 Breaking
+
+- **All autofixes and suggestions now emit the canonical methods** — `.bg()`, `.p()`, `.text()`, `.font()`, `.border()`, `.ring()`, `.list()`, `.mask()`, `.bgLinear()`, … — and the 12 directional shorthands own their prefixes (`mt-2` → `.mt("2")`, no longer `.m("t", "2")`). Apps must be on the canonical fluent-html release for fixes to compile.
+- **Derivation understands merged vocab rows** — the new `values: { kind: "group" }` spec contributes one exact list per family through the row's own emit fn, so `text-center`, `flex-wrap`, `border-dashed`, `mask-add`, `outline-hidden`, `bg-linear-to-br` all derive with `fixedValue`s. The merges collapsed the residue tables: `RESIDUE_PREFIX_OWNERS` shrank from 15 entries to the 12 shorthand owners + `snap-`; `PREFERRED_EXACTS` is empty (`bold()` is gone).
+- **`no-fluent-equivalent-in-setstyle`** suggestions updated (`font-size` → `.text("px", …)`, `margin-top` → `.mt(…)`, `color` → `.text()`, `background` → `.bg()`, `z-index` → `.z()`, …); `no-removed-v4-utilities` message names `.bg()`.
+
+### ✨ Added
+
+- **Regenerated vocab tables** for the canonical surface (189 methods, 38 unit methods, 638 derived patterns).
+
 ## [3.0.0] - Escape-hatch closure: CI-blocking raw-class rules
 
 The lint arm of fluent-html's `llm-styling/escape-hatch` scope (pairs with fluent-html 6.8.0).
