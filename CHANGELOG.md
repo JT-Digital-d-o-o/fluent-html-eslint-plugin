@@ -2,6 +2,15 @@
 
 All notable changes to `eslint-plugin-fluent-html` are documented here.
 
+## [2.1.0] - Escape-hatch gap-fill methods
+
+### ✨ Added
+
+- **Regenerated vocab tables** for fluent-html 6.8.0: `VOCAB_METHODS` now includes
+  `.appearance()`, `.wrap()`, `.content()` (200 methods; 636 derived patterns), so
+  `prefer-unit-overload` / `no-fluent-equivalent-in-setstyle` know the new surface.
+  Suggestions naming these methods apply to apps on fluent-html ≥6.8.0.
+
 ## [2.0.0] - Vocab-derived fix tables
 
 `no-known-modifiers-in-setclass` no longer carries a hand-maintained pattern table — the ~780-line `FIXABLE_PATTERNS`/`MODIFIER_MAP` block is **derived from `fluent-html/class-vocab` at rule-load** (fluent-html's C-05 single source of truth, ~600 patterns). The hand table had already drifted: it was missing `shadowColor`/`fontFamily` prefix coverage and the `group`/`peer` markers, and suggested methods deleted in fluent-html v6 (`.position()`, `.display()`, `.flex1()`).
