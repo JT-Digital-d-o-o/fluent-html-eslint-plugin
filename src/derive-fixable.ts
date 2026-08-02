@@ -142,7 +142,7 @@ function loadClassVocab(): ClassVocabModule {
   } catch (cause) {
     throw new Error(
       "eslint-plugin-fluent-html: the no-known-modifiers-in-setclass rule derives its fix tables from " +
-        "fluent-html/class-vocab and needs the `fluent-html` peer dependency (>= 6.7.0) installed, on a Node " +
+        "fluent-html/class-vocab and needs the `fluent-html` peer dependency (>= 7.0.0) installed, on a Node " +
         `version with require(esm) support (>= 20.19 / 22.12). Underlying error: ${String(cause)}`,
     );
   }
