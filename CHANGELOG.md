@@ -12,8 +12,13 @@ The lint arm of fluent-html's `llm-styling/canonical-names` (pairs with fluent-h
 - **Derivation understands merged vocab rows** — the new `values: { kind: "group" }` spec contributes one exact list per family through the row's own emit fn, so `text-center`, `flex-wrap`, `border-dashed`, `mask-add`, `outline-hidden`, `bg-linear-to-br` all derive with `fixedValue`s. The merges collapsed the residue tables: `RESIDUE_PREFIX_OWNERS` shrank from 15 entries to the 12 shorthand owners + `snap-`; `PREFERRED_EXACTS` is empty (`bold()` is gone).
 - **`no-fluent-equivalent-in-setstyle`** suggestions updated (`font-size` → `.text("px", …)`, `margin-top` → `.mt(…)`, `color` → `.text()`, `background` → `.bg()`, `z-index` → `.z()`, …); `no-removed-v4-utilities` message names `.bg()`.
 
+### 💥 Breaking — object-variant autofixes (`llm-styling/object-variants`)
+
+- **Variant-token autofixes now emit the object form** — `hover:bg-blue-600` → `.hover({ bg: "blue-600" })`, `sm:grid-cols-2` → `.sm({ gridCols: "2" })`, nested heads as nested keys (`sm:hover:bg-blue-600` → `.sm({ hover: { bg: "blue-600" } })`), `2xl:` → `.xl2({…})`, directional spacing flattened (`px-16` → `px: "16"`), bare optionals as `true` (`focus:ring` → `.focus({ ring: true })`), non-tier-1 outer heads via `.variant("peer-invalid", {…})`. Object keys derive from `fluent-html/class-vocab`'s `variantKeySpecs` at rule-load (no local table). A non-tier-1 head in nested position is not object-expressible — those tokens report without an autofix. All `.on()`/`.at()` teaching in rule messages replaced.
+
 ### ✨ Added
 
+- **`require-satisfies-variant-object`** (error, in `recommended`) — an extracted variant style object passed by name (or spread into a variant object) bypasses TS excess-property spell-checking; the rule requires its declaration to be pinned with `satisfies VariantStyleObject`. Same-named non-fluent calls are guarded by a variant-key shape check; unresolvable names (imports, params) are skipped — the rule fires where the declaration is visible.
 - **Regenerated vocab tables** for the canonical surface (189 methods, 38 unit methods, 638 derived patterns).
 
 ### 📝 Docs

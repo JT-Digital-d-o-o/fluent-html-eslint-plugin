@@ -23,7 +23,7 @@
 
 // Type-only import — erased at compile time, so no ESM-from-CJS import remains
 // (runtime loading happens via require(esm) in loadClassVocab below).
-import type { UtilityDef } from "fluent-html/class-vocab" with { "resolution-mode": "import" };
+import type { UtilityDef, VariantKeySpec } from "fluent-html/class-vocab" with { "resolution-mode": "import" };
 
 // Configuration for auto-fixable patterns
 export interface FixablePattern {
@@ -131,6 +131,8 @@ const RESIDUE_PREFIXES: readonly FixablePattern[] = [
 type ClassVocabModule = {
   classVocab: readonly UtilityDef[];
   emitClasses: (shape: UtilityDef["emit"], args?: readonly string[]) => string[];
+  variantKeySpecs: readonly VariantKeySpec[];
+  DIRECT_VARIANTS: Readonly<Record<string, string>>;
 };
 
 function loadClassVocab(): ClassVocabModule {
@@ -292,4 +294,38 @@ export function getFixableTables(): { patterns: readonly FixablePattern[]; modif
   }
   cached = { patterns, modifierMap };
   return cached;
+}
+
+// ── Object-variant tables (llm-styling/object-variants) ─────────────
+
+export type VariantTables = {
+  /** Tailwind variant prefix → tier-1 method/nested-key name (`2xl` → `xl2`). */
+  tier1ByPrefix: Readonly<Record<string, string>>;
+  /** Tier-1 method names (`hover`, `md`, `xl2`, …). */
+  tier1Names: ReadonlySet<string>;
+  /** Every `VariantStyleObject` style key (`bg`, `px`, `translateY`, …). */
+  styleKeys: ReadonlySet<string>;
+  /** `method` / `method|dir` → the flattened variant-object key (`p|x` → `px`, `translate|y` → `translateY`). */
+  keyFor: (methodName: string, direction?: string) => string | undefined;
+};
+
+let cachedVariants: VariantTables | undefined;
+
+/** Derive (once per lint run) the tier-1 name map + method→object-key lookup. */
+export function getVariantTables(): VariantTables {
+  if (cachedVariants) return cachedVariants;
+  const vocab = loadClassVocab();
+  const tier1ByPrefix: Record<string, string> = {};
+  for (const [name, prefix] of Object.entries(vocab.DIRECT_VARIANTS)) tier1ByPrefix[prefix] = name;
+  const byMethodDir = new Map<string, string>();
+  for (const spec of vocab.variantKeySpecs) {
+    byMethodDir.set(`${spec.def.method}|${spec.pre.join(",")}`, spec.key);
+  }
+  cachedVariants = {
+    tier1ByPrefix,
+    tier1Names: new Set(Object.keys(vocab.DIRECT_VARIANTS)),
+    styleKeys: new Set(vocab.variantKeySpecs.map((s) => s.key)),
+    keyFor: (methodName, direction) => byMethodDir.get(`${methodName}|${direction ?? ""}`),
+  };
+  return cachedVariants;
 }

@@ -1,5 +1,6 @@
 import { Rule } from "eslint";
 import { analyzeToken, isTailwindToken, TokenAnalysis } from "../tailwind-token";
+import { getVariantTables } from "../derive-fixable";
 
 // The CI-blocking guard on raw Tailwind strings (llm-styling/escape-hatch;
 // supersedes no-known-modifiers-in-setclass). Every whitespace token in an
@@ -26,7 +27,7 @@ const rule: Rule.RuleModule = {
       tailwindNoMethod:
         "'{{className}}' in .{{callee}}() is a Tailwind '{{root}}-*' utility with no fluent method. Use .cssProp() for arbitrary CSS, or file the vocab gap — raw strings are invisible to conflict detection.",
       variantNoMethod:
-        "'{{className}}' in .{{callee}}() bypasses the typed surface. Move it into .{{variantMethod}}(\"{{head}}\", t => ...) using the fluent methods.",
+        "'{{className}}' in .{{callee}}() bypasses the typed surface. Move it into a variant style object — {{variantForm}} — using the canonical style keys.",
     },
     schema: [
       {
@@ -58,14 +59,14 @@ const rule: Rule.RuleModule = {
         });
       } else if (a.heads.length > 0 && a.headsKnown) {
         const head = a.heads[0];
+        const tier1 = getVariantTables().tier1ByPrefix[head];
         context.report({
           node,
           messageId: "variantNoMethod",
           data: {
             callee: calleeName,
             className: a.token,
-            variantMethod: head === "sm" || head === "md" || head === "lg" || head === "xl" || head === "2xl" || head.startsWith("@") ? "at" : "on",
-            head,
+            variantForm: tier1 !== undefined ? `.${tier1}({ ... })` : `.variant("${head}", { ... })`,
           },
         });
       } else if (a.classification.kind === "tailwind-unmapped") {

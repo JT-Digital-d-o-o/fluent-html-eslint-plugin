@@ -5,7 +5,7 @@
 // generated TAILWIND_ROOTS list (from the lib's pinned design system) — so
 // `sidebar-backdrop` / `entry-row` / `hamburger-line` are never flagged.
 
-import { FixablePattern, getFixableTables } from "./derive-fixable";
+import { FixablePattern, getFixableTables, getVariantTables } from "./derive-fixable";
 import { TAILWIND_ROOTS } from "./vocab.generated";
 
 /** Split a class token on `:` outside brackets: variant heads + base utility. */
@@ -116,12 +116,27 @@ export type TokenAnalysis = {
   headsKnown: boolean;
   classification: BaseClassification;
   /**
-   * Full fluent replacement for the token — the base fix wrapped in
-   * `.at()`/`.on()` per variant head (outermost first). Null when the base is
-   * not mapped or a head is unknown.
+   * Full fluent replacement for the token — a plain method call, or for a
+   * variant-prefixed token the object form (`.hover({ bg: "blue-600" })`,
+   * nested heads as nested keys, non-tier-1 outer head via `.variant()`).
+   * Null when the base is not mapped, a head is unknown, or the head chain is
+   * not object-expressible (a non-tier-1 head in nested position).
    */
   fluentChain: string | null;
 };
+
+/**
+ * The variant-object entry for a mapped base (`bg: "blue-600"`, `px: "4"`,
+ * `truncate: true`), or null when the pattern has no flattened object key.
+ */
+function objectEntryText(pattern: FixablePattern, className: string): string | null {
+  const key = getVariantTables().keyFor(pattern.methodName, pattern.direction);
+  if (key === undefined) return null;
+  if (pattern.exactMatch) {
+    return pattern.fixedValue !== undefined ? `${key}: "${pattern.fixedValue}"` : `${key}: true`;
+  }
+  return `${key}: "${className.slice(pattern.pattern.length)}"`;
+}
 
 /** Analyze one whitespace-split class token (variants + base). */
 export function analyzeToken(token: string): TokenAnalysis {
@@ -131,15 +146,22 @@ export function analyzeToken(token: string): TokenAnalysis {
 
   let fluentChain: string | null = null;
   if (classification.kind === "mapped" && headsKnown) {
-    let inner = classification.fix;
-    for (let i = heads.length - 1; i >= 0; i--) {
-      const head = heads[i];
-      const method = isBreakpointHead(head) ? "at" : "on";
-      const param = i === 0 ? "t" : `t${i}`;
-      const innerNoDot = inner.startsWith(".") ? inner.slice(1) : inner;
-      inner = `.${method}("${head}", ${param} => ${param}.${innerNoDot})`;
+    if (heads.length === 0) {
+      fluentChain = classification.fix;
+    } else {
+      const { tier1ByPrefix } = getVariantTables();
+      // Nested heads must be tier-1 names (only they exist as nested keys);
+      // the outer head may fall back to the generic `.variant(name, {…})`.
+      const nested = heads.slice(1).map((h) => tier1ByPrefix[h]);
+      let entry = objectEntryText(classification.pattern, base);
+      if (entry !== null && nested.every((n): n is string => n !== undefined)) {
+        for (let i = nested.length - 1; i >= 0; i--) entry = `${nested[i]}: { ${entry} }`;
+        const outerTier1 = tier1ByPrefix[heads[0]];
+        fluentChain = outerTier1 !== undefined
+          ? `.${outerTier1}({ ${entry} })`
+          : `.variant("${heads[0]}", { ${entry} })`;
+      }
     }
-    fluentChain = inner;
   }
   return { token, heads, base, headsKnown, classification, fluentChain };
 }

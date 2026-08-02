@@ -25,6 +25,7 @@ import noFluentEquivalentInSetstyle = require("./rules/no-fluent-equivalent-in-s
 import noTailwindInRawClass = require("./rules/no-tailwind-in-raw-class");
 import noDynamicClassArgument = require("./rules/no-dynamic-class-argument");
 import noTailwindInCssclass = require("./rules/no-tailwind-in-cssclass");
+import requireSatisfiesVariantObject = require("./rules/require-satisfies-variant-object");
 
 const plugin = {
   rules: {
@@ -55,6 +56,7 @@ const plugin = {
     "no-tailwind-in-raw-class": noTailwindInRawClass,
     "no-dynamic-class-argument": noDynamicClassArgument,
     "no-tailwind-in-cssclass": noTailwindInCssclass,
+    "require-satisfies-variant-object": requireSatisfiesVariantObject,
   },
   configs: {
     recommended: {
@@ -65,6 +67,7 @@ const plugin = {
         "fluent-html/no-tailwind-in-raw-class": "error",
         "fluent-html/no-dynamic-class-argument": "error",
         "fluent-html/no-tailwind-in-cssclass": "error",
+        "fluent-html/require-satisfies-variant-object": "error",
         "fluent-html/no-unnecessary-spaces-in-setclass": "warn",
         "fluent-html/no-duplicate-classes-in-setclass": "warn",
         "fluent-html/no-conflicting-classes-in-setclass": "warn",

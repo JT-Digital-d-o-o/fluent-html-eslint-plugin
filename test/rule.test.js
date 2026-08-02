@@ -1386,24 +1386,42 @@ runSuite("no-tailwind-in-raw-class", noTailwindInRawClass, {
         message: `'grid-cols-1' in .addClass() bypasses the typed surface. Replace with: .gridCols("1"). [autofix]`,
       }],
     },
-    // the design's flagship case: variant token folds into .at()
+    // the design's flagship case: variant token folds into the object form
     {
       code: `Div().addClass("grid-cols-1 sm:grid-cols-2")`,
-      output: `Div().gridCols("1").at("sm", t => t.gridCols("2"))`,
+      output: `Div().gridCols("1").sm({ gridCols: "2" })`,
       errors: [
         { messageId: "replaceWith", data: { callee: "addClass", className: "grid-cols-1", fluentChain: `.gridCols("1")` } },
-        { messageId: "replaceWith", data: { callee: "addClass", className: "sm:grid-cols-2", fluentChain: `.at("sm", t => t.gridCols("2"))` } },
+        { messageId: "replaceWith", data: { callee: "addClass", className: "sm:grid-cols-2", fluentChain: `.sm({ gridCols: "2" })` } },
       ],
     },
-    // state variant → .on(); multi-level variants nest
+    // state variant → tier-1 object method; multi-level variants nest as keys
     {
       code: `Div().addClass("hover:bg-blue-600")`,
-      output: `Div().on("hover", t => t.bg("blue-600"))`,
+      output: `Div().hover({ bg: "blue-600" })`,
       errors: [{ messageId: "replaceWith" }],
     },
     {
       code: `Div().addClass("sm:hover:bg-blue-600")`,
-      output: `Div().at("sm", t => t.on("hover", t1 => t1.bg("blue-600")))`,
+      output: `Div().sm({ hover: { bg: "blue-600" } })`,
+      errors: [{ messageId: "replaceWith" }],
+    },
+    // 2xl spells its tier-1 member xl2; directional spacing flattens (px)
+    {
+      code: `Div().addClass("2xl:px-16")`,
+      output: `Div().xl2({ px: "16" })`,
+      errors: [{ messageId: "replaceWith" }],
+    },
+    // non-tier-1 outer head falls back to the generic .variant()
+    {
+      code: `Div().addClass("peer-invalid:text-red-600")`,
+      output: `Div().variant("peer-invalid", { text: "red-600" })`,
+      errors: [{ messageId: "replaceWith" }],
+    },
+    // bare optional utility under a variant → boolean-true entry
+    {
+      code: `Div().addClass("focus:ring")`,
+      output: `Div().focus({ ring: true })`,
       errors: [{ messageId: "replaceWith" }],
     },
     // unknown-but-Tailwind-shaped with a real root (PRD: shadow-violet-500/40)
@@ -1433,11 +1451,16 @@ runSuite("no-tailwind-in-raw-class", noTailwindInRawClass, {
         { messageId: "replaceWith" },
       ],
     },
-    // arbitrary-selector variant head is recognized
+    // arbitrary-selector variant head is recognized → generic .variant()
     {
       code: `Div().addClass("[&>li]:p-2")`,
-      output: `Div().on("[&>li]", t => t.p("2"))`,
+      output: `Div().variant("[&>li]", { p: "2" })`,
       errors: [{ messageId: "replaceWith" }],
+    },
+    // non-tier-1 head in NESTED position is not object-expressible — report, no autofix
+    {
+      code: `Div().addClass("hover:peer-invalid:underline")`,
+      errors: [{ messageId: "variantNoMethod" }],
     },
     // setClasses array elements are analyzed (no autofix)
     {
@@ -1502,8 +1525,50 @@ runSuite("no-tailwind-in-cssclass", noTailwindInCssclass, {
     // variant token is Tailwind by its head
     {
       code: `Div().cssClass("hover:bg-blue-600")`,
-      output: `Div().on("hover", t => t.bg("blue-600"))`,
+      output: `Div().hover({ bg: "blue-600" })`,
       errors: [{ messageId: "tailwindInCssClass" }],
+    },
+  ],
+});
+
+// ------------------------------------
+// require-satisfies-variant-object (object-variants excess-property hole)
+// ------------------------------------
+
+const requireSatisfiesVariantObject = require("../dist/rules/require-satisfies-variant-object");
+
+runTsSuite("require-satisfies-variant-object", requireSatisfiesVariantObject, {
+  valid: [
+    // inline object literals get excess-property checking from TS itself
+    { code: `Div().hover({ bg: "blue-600" })` },
+    { code: `Div().variant("data-[state=open]", { rounded: "lg" })` },
+    // satisfies-pinned const — the declaration site re-runs the literal check
+    { code: `const glow = { shadow: "lg", ring: 2 } satisfies VariantStyleObject; Div().hover(glow);` },
+    { code: `const glow = { shadow: "lg" } satisfies VariantStyleObject; Div().hover({ ...glow, bg: "blue-600" });` },
+    // unresolvable (imported/param) names are skipped — declaration site is elsewhere
+    { code: `import { glow } from "./presets"; Div().hover(glow);` },
+    // same-named non-fluent calls never fire (keys are not variant keys)
+    { code: `const item = { priority: 1 }; queue.last(item);` },
+    { code: `el.focus(options);` },
+    // nested tier-1 keys with inline objects are fine
+    { code: `Div().md({ hover: { bg: "blue-700" } })` },
+  ],
+  invalid: [
+    {
+      code: `const glow = { shadow: "lg", ring: 2 }; Div().hover(glow);`,
+      errors: [{ messageId: "requireSatisfies" }],
+    },
+    {
+      code: `const styles = { bg: "blue-50" }; Div().variant("aria-checked", styles);`,
+      errors: [{ messageId: "requireSatisfies" }],
+    },
+    {
+      code: `const glow = { shadow: "lg" }; Div().hover({ ...glow, bg: "blue-600" });`,
+      errors: [{ messageId: "requireSatisfiesSpread" }],
+    },
+    {
+      code: `const inner = { bg: "gray-800" }; Div().dark({ hover: { ...inner } });`,
+      errors: [{ messageId: "requireSatisfiesSpread" }],
     },
   ],
 });

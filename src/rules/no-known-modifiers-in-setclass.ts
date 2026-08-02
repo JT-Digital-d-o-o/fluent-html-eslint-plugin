@@ -99,8 +99,8 @@ const rule: Rule.RuleModule = {
     fixable: "code",
     messages: {
       useKnownModifier: "Avoid using .{{callee}}() with '{{className}}'. Use .{{method}} instead to prevent style overrides.",
-      useVariantMethod: "Avoid using .{{callee}}() with '{{className}}'. Use .{{variantMethod}}(\"{{variant}}\", t => t.{{method}}) instead.",
-      useVariantMethodGeneric: "Avoid using .{{callee}}() with '{{className}}'. Use .{{variantMethod}}(\"{{variant}}\", t => t.addClass(\"{{baseClass}}\")) instead.",
+      useVariantMethod: "Avoid using .{{callee}}() with '{{className}}'. Use a '{{variant}}' variant style object (tier-1 method or .variant(\"{{variant}}\", { ... })) with the canonical style keys instead.",
+      useVariantMethodGeneric: "Avoid using .{{callee}}() with '{{className}}'. Move '{{baseClass}}' into a '{{variant}}' variant style object using the canonical style keys instead.",
     },
     schema: [
       {

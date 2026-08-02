@@ -27,11 +27,11 @@ Div().setClass("bg-red-500 p-4")
 // ✅ Auto-fixed to:
 Div().bg("red-500").p("4")
 
-// ✅ Variants use .on()/.at() — never raw "hover:…"/"md:…" strings
+// ✅ Variants are typed style objects — never raw "hover:…"/"md:…" strings
 Div()
   .bg("red-500")
   .p("4")
-  .on("hover", t => t.bg("red-600"))
+  .hover({ bg: "red-600" })
 ```
 
 ### Auto-Fix
@@ -121,16 +121,17 @@ All rules are included in the `recommended` preset at the severity shown. 🔧 =
 
 | Rule | Recommended | What it does |
 |------|:-----------:|--------------|
-| `no-tailwind-in-raw-class` 🔧 | error | **(v3)** Tailwind utilities in `.addClass()`/`.setClass()`/`.setClasses()` literals — prefix-anchored against the derived vocab tables + the generated Tailwind root list; autofixes to the fluent chain incl. `.on()`/`.at()` wrappers for variant tokens |
+| `no-tailwind-in-raw-class` 🔧 | error | **(v3)** Tailwind utilities in `.addClass()`/`.setClass()`/`.setClasses()` literals — prefix-anchored against the derived vocab tables + the generated Tailwind root list; autofixes to the fluent chain incl. variant style objects for variant tokens (`hover:bg-blue-600` → `.hover({ bg: "blue-600" })`, nested heads as nested keys) |
 | `no-dynamic-class-argument` | error | **(v3)** Non-literal arg to `.addClass()`/`.setClass()`/`.cssClass()` — invisible to the safelist extractor; routes to `.when()`/`Match` literal branches or `staticManifest` |
 | `no-tailwind-in-cssclass` 🔧 | error | **(v3)** Tailwind-shaped token inside `.cssClass()` (the non-Tailwind intent marker) — keeps the sanctioned hatch clean |
+| `require-satisfies-variant-object` | error | **(v4)** Extracted variant style objects (passed by name or spread into `.hover({…})`/`.variant()`) must pin their declaration with `satisfies VariantStyleObject` — excess-property key spell-checking doesn't reach through a plain variable |
 | `no-known-modifiers-in-setclass` 🔧 | — | **Deprecated** — superseded by `no-tailwind-in-raw-class`; no longer in the recommended preset |
 | `no-unnecessary-spaces-in-setclass` 🔧 | warn | Extra whitespace in a class string |
 | `no-duplicate-classes-in-setclass` 🔧 | warn | A class repeated in the same `.setClass()` |
 | `no-conflicting-classes-in-setclass` | warn | Mutually-exclusive classes in one `.setClass()` (incl. v4 gradient families) |
 | `no-empty-setclass` 🔧 | warn | `.setClass("")` / no-op class calls |
 | `no-multiple-setclass-in-chain` | error | More than one `.setClass()` in a chain (the later clobbers the earlier) |
-| `no-setclass-after-fluent-modifier` | error | `.setClass()` after a fluent modifier (`.p()`, `.on()`, …) silently drops it |
+| `no-setclass-after-fluent-modifier` | error | `.setClass()` after a fluent modifier (`.p()`, `.hover()`, …) silently drops it |
 | `no-setclass-in-when-apply-callback` | error | `.setClass()` inside a `.when()`/`.apply()` callback |
 | `prefer-variadic-children` 🔧 | warn | Pass children variadically, not as an array (`Div(a, b)`, not `Div([a, b])`) |
 | `prefer-foreach` 🔧 | warn | `.map()` as element children → `ForEach` (`Div(...xs.map(Row))` / `Div(xs.map(Row))` → `Div(ForEach(xs, Row))`) |
@@ -155,14 +156,14 @@ Three error-level rules close the raw-class-string hole around the typed styling
 
 ```
 'grid-cols-1 sm:grid-cols-2' in .addClass() bypasses the typed surface.
-Replace with: .gridCols("1").at("sm", t => t.gridCols("2")). [autofix]
+Replace with: .gridCols("1").sm({ gridCols: "2" }). [autofix]
 
 .addClass(colors) is invisible to the safelist extractor — styles can silently
 disappear in production. Use .when(...) / Match(...) with literal classes per
 branch, or defineTheme's staticManifest for token-driven values.
 ```
 
-- **`no-tailwind-in-raw-class`** — flags a token when the derived fix table maps it, when it carries a known variant head (`hover:`, `sm:`, `[&>li]:`, …), or when it is Tailwind-shaped **and** its root is in the generated Tailwind root list (from the lib's pinned Tailwind design system). Matching is prefix-anchored, never a bare shape regex — `sidebar-backdrop`, `entry-row`, `hamburger-line` are never flagged. When every flagged token is mappable the whole call autofixes to the fluent chain, folding variant tokens into `.on()`/`.at()`.
+- **`no-tailwind-in-raw-class`** — flags a token when the derived fix table maps it, when it carries a known variant head (`hover:`, `sm:`, `[&>li]:`, …), or when it is Tailwind-shaped **and** its root is in the generated Tailwind root list (from the lib's pinned Tailwind design system). Matching is prefix-anchored, never a bare shape regex — `sidebar-backdrop`, `entry-row`, `hamburger-line` are never flagged. When every flagged token is mappable the whole call autofixes to the fluent chain, folding variant tokens into variant style objects (tier-1 methods or `.variant()`).
 - **`no-dynamic-class-argument`** — non-literal args to `addClass`/`setClass`/`cssClass` (variables, ternaries, interpolated templates) are errors: the extractor records literals only, so computed classes can vanish from the production safelist with zero build signal.
 - **`no-tailwind-in-cssclass`** — `.cssClass()` (fluent-html ≥6.8.0) marks legitimately non-Tailwind classes; a Tailwind utility inside it is mis-filed and autofixes back to the typed surface.
 
@@ -219,11 +220,11 @@ Div().p("4").m("2")
 Div().flex().justify("center").items("center")
 Div().text("xl").font("bold").text("center")
 
-// Variants via .on()/.at() — the autofix folds "hover:bg-red-600" into this form
+// Variants as style objects — the autofix folds "hover:bg-red-600" into this form
 Div()
   .bg("red-500")
-  .on("hover", t => t.bg("red-600"))
-  .on("focus", t => t.ring("2"))
+  .hover({ bg: "red-600" })
+  .focus({ ring: "2" })
 
 // Non-Tailwind classes (JS hooks, third-party widgets) use the intent marker
 Div().cssClass("js-map-container")
@@ -231,7 +232,7 @@ Div().cssClass("js-map-container")
 
 ## Escape hatches — where each raw need goes
 
-- **Base styles** → dedicated methods (`.bg()`, `.p()`, …); **variants** → `.on()` / `.at()`
+- **Base styles** → dedicated methods (`.bg()`, `.p()`, …); **variants** → typed style objects (`.hover({…})`, `.md({…})`, `.variant()`)
 - **Arbitrary value of a covered utility** → bracket arm or unit overload: `.text("[13px]")`, `.w("px", 180)`
 - **CSS property with no Tailwind utility** → `.cssProp("mask-repeat", "no-repeat")`
 - **Legit non-Tailwind class** → `.cssClass("js-hook")` (`no-tailwind-in-cssclass` guards against mis-filed utilities)
