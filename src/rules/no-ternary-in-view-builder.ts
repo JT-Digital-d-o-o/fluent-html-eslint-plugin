@@ -81,12 +81,46 @@ const rule: Rule.RuleModule = {
     messages: {
       noTernaryInViewBuilder:
         "Avoid ternary expressions as children in {{name}}(). Use .when(condition, t => t.children(...)) instead.",
+      noTernaryAssignment:
+        "Avoid assigning a Tag ternary to `{{name}}` — the variable form hides the same branch. Use IfThenElse(cond, () => …, () => …) (or Match on a discriminant) instead.",
     },
     schema: [],
   },
 
   create(context: Rule.RuleContext): Rule.RuleListener {
     return {
+      // The audit's escapee: `const x = cond ? Tag : Tag` handed to an element later.
+      // Both sides being element chains makes this view-building with near-certainty,
+      // so the assignment itself is flagged — no data-flow tracking needed.
+      VariableDeclarator(node: any) {
+        if (
+          node.init &&
+          node.init.type === "ConditionalExpression" &&
+          couldBeViewElement(node.init.consequent) &&
+          couldBeViewElement(node.init.alternate)
+        ) {
+          context.report({
+            node: node.init,
+            messageId: "noTernaryAssignment",
+            data: { name: node.id.type === "Identifier" ? node.id.name : "…" },
+          });
+        }
+      },
+
+      AssignmentExpression(node: any) {
+        if (
+          node.right.type === "ConditionalExpression" &&
+          couldBeViewElement(node.right.consequent) &&
+          couldBeViewElement(node.right.alternate)
+        ) {
+          context.report({
+            node: node.right,
+            messageId: "noTernaryAssignment",
+            data: { name: node.left.type === "Identifier" ? node.left.name : "…" },
+          });
+        }
+      },
+
       CallExpression(node: any) {
         if (!isElementCall(node)) return;
 

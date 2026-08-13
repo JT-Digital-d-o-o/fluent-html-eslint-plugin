@@ -1,5 +1,9 @@
 import { Rule } from "eslint";
 
+// The click verbs stamp cursor-pointer themselves (swap-verbs keepClickableCursor),
+// so a verb-chained anchor already has the affordance.
+const CLICK_VERBS = new Set(["nav", "tab", "submit", "fragment", "fire"]);
+
 const rule: Rule.RuleModule = {
   meta: {
     type: "suggestion",
@@ -50,6 +54,13 @@ const rule: Rule.RuleModule = {
               call.arguments.length >= 1 &&
               call.arguments[0].type === "Literal" &&
               call.arguments[0].value === "pointer"
+            ) {
+              hasCursorPointer = true;
+              break;
+            }
+            if (
+              current.property.type === "Identifier" &&
+              CLICK_VERBS.has(current.property.name)
             ) {
               hasCursorPointer = true;
               break;

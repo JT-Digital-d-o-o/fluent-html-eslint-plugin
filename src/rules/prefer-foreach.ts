@@ -52,6 +52,51 @@ function isMapCall(n: any): boolean {
   );
 }
 
+// A `<obj>.flatMap(...)` call — array-producing like .map, no direct ForEach fix
+// (the flattening step has no mechanical equivalent), so report-only.
+function isFlatMapCall(n: any): boolean {
+  return (
+    n &&
+    n.type === "CallExpression" &&
+    n.callee.type === "MemberExpression" &&
+    !n.callee.computed &&
+    n.callee.property.type === "Identifier" &&
+    n.callee.property.name === "flatMap" &&
+    n.arguments.length >= 1
+  );
+}
+
+// `Array.from(...)` / `Array.of(...)` — the audit's escapee was
+// `...Array.from({length: n}, (_, i) => …)`, which is exactly ForEach's count overload.
+function isArrayStaticCall(n: any, method: "from" | "of"): boolean {
+  return (
+    n &&
+    n.type === "CallExpression" &&
+    n.callee.type === "MemberExpression" &&
+    !n.callee.computed &&
+    n.callee.object.type === "Identifier" &&
+    n.callee.object.name === "Array" &&
+    n.callee.property.type === "Identifier" &&
+    n.callee.property.name === method
+  );
+}
+
+// `{ length: <expr> }` with exactly that one property — the count-iteration idiom.
+function lengthOnlyObject(n: any): any | null {
+  if (
+    n &&
+    n.type === "ObjectExpression" &&
+    n.properties.length === 1 &&
+    n.properties[0].type === "Property" &&
+    !n.properties[0].computed &&
+    ((n.properties[0].key.type === "Identifier" && n.properties[0].key.name === "length") ||
+      (n.properties[0].key.type === "Literal" && n.properties[0].key.value === "length"))
+  ) {
+    return n.properties[0].value;
+  }
+  return null;
+}
+
 // Fixable only when the fix is behaviour-preserving: exactly one `.map` argument
 // (a second arg is `thisArg`, which ForEach has no slot for) and a callback whose
 // arity is ≤ 2 (ForEach passes only `(item, index)` — a callback reading the 3rd
@@ -79,6 +124,8 @@ const rule: Rule.RuleModule = {
     messages: {
       preferForeach:
         "Use ForEach({{list}}, …) for {{name}}'s children, not .map(). ForEach carries the count/range overloads and the ForEachKeyed upgrade path; a spread/array .map() forfeits both.",
+      preferForeachProducer:
+        "Use ForEach for {{name}}'s children, not {{producer}}. ForEach carries the count/range overloads and the ForEachKeyed upgrade path; an array-producing spread forfeits both.",
     },
     schema: [],
   },
@@ -92,6 +139,18 @@ const rule: Rule.RuleModule = {
     let foreachImported = false;
     let importFixEmitted = false;
 
+    function withImportFix(fixer: any, fixes: any[]): any[] {
+      // Add ForEach to the existing fluent-html import once, if missing.
+      if (!foreachImported && !importFixEmitted && fluentImport) {
+        const named = fluentImport.specifiers.filter((s: any) => s.type === "ImportSpecifier");
+        if (named.length > 0) {
+          fixes.push(fixer.insertTextAfter(named[named.length - 1], ", ForEach"));
+          importFixEmitted = true;
+        }
+      }
+      return fixes;
+    }
+
     function reportViolation(elementName: string, mapCall: any, reportNode: any, isSpread: boolean) {
       const objText = sourceCode.getText(mapCall.callee.object);
       const fixable = isFixableCallback(mapCall);
@@ -103,21 +162,61 @@ const rule: Rule.RuleModule = {
         fix: fixable
           ? (fixer) => {
               const fnText = sourceCode.getText(mapCall.arguments[0]);
-              const fixes = [
-                // Replacing reportNode's range drops the leading `...` for a spread
-                // (reportNode is the SpreadElement) and swaps the call for an array child.
+              // Replacing reportNode's range drops the leading `...` for a spread
+              // (reportNode is the SpreadElement) and swaps the call for an array child.
+              return withImportFix(fixer, [
                 fixer.replaceText(reportNode, `ForEach(${objText}, ${fnText})`),
-              ];
-              // Add ForEach to the existing fluent-html import once, if missing.
-              if (!foreachImported && !importFixEmitted && fluentImport) {
-                const named = fluentImport.specifiers.filter((s: any) => s.type === "ImportSpecifier");
-                if (named.length > 0) {
-                  fixes.push(fixer.insertTextAfter(named[named.length - 1], ", ForEach"));
-                  importFixEmitted = true;
-                }
-              }
-              return fixes;
+              ]);
             }
+          : undefined,
+      });
+    }
+
+    // `Array.from({length: N}, (_, i) => …)` → `ForEach(N, (i) => …)` when the element
+    // param is provably unused; `Array.from(iterable, cb)` → `ForEach(iterable, cb)`
+    // (identical (item, index) contract); everything else reports without a fix.
+    function producerFixText(call: any): string | null {
+      if (isArrayStaticCall(call, "from")) {
+        const lengthExpr = lengthOnlyObject(call.arguments[0]);
+        if (lengthExpr) {
+          const cb = call.arguments[1];
+          if (
+            call.arguments.length === 2 &&
+            cb &&
+            cb.type === "ArrowFunctionExpression" &&
+            cb.params.length <= 2 &&
+            (cb.params.length === 0 ||
+              (cb.params[0].type === "Identifier" &&
+                /^[A-Za-z_][A-Za-z0-9_]*$/.test(cb.params[0].name) &&
+                !new RegExp(`\\b${cb.params[0].name}\\b`).test(sourceCode.getText(cb.body))))
+          ) {
+            const lenText = sourceCode.getText(lengthExpr);
+            const indexParam = cb.params[1];
+            if (indexParam && indexParam.type !== "Identifier") return null;
+            const paramText = indexParam ? `(${indexParam.name})` : "()";
+            return `ForEach(${lenText}, ${paramText} => ${sourceCode.getText(cb.body)})`;
+          }
+          return null;
+        }
+        const srcText = call.arguments[0] ? sourceCode.getText(call.arguments[0]) : null;
+        if (!srcText) return null;
+        if (call.arguments.length === 1) return `ForEach(${srcText}, (v) => v)`;
+        if (call.arguments.length === 2 && isFixableCallback({ arguments: [call.arguments[1]] })) {
+          return `ForEach(${srcText}, ${sourceCode.getText(call.arguments[1])})`;
+        }
+        return null;
+      }
+      return null;
+    }
+
+    function reportProducer(elementName: string, call: any, reportNode: any, producer: string) {
+      const fixText = producerFixText(call);
+      context.report({
+        node: reportNode,
+        messageId: "preferForeachProducer",
+        data: { name: elementName, producer },
+        fix: fixText
+          ? (fixer) => withImportFix(fixer, [fixer.replaceText(reportNode, fixText)])
           : undefined,
       });
     }
@@ -139,10 +238,15 @@ const rule: Rule.RuleModule = {
         if (node.callee.type !== "Identifier" || !ELEMENT_FUNCTIONS.has(node.callee.name)) return;
 
         for (const arg of node.arguments) {
-          if (isMapCall(arg)) {
-            reportViolation(node.callee.name, arg, arg, false);
-          } else if (arg.type === "SpreadElement" && isMapCall(arg.argument)) {
-            reportViolation(node.callee.name, arg.argument, arg, true);
+          const target = arg.type === "SpreadElement" ? arg.argument : arg;
+          if (isMapCall(target)) {
+            reportViolation(node.callee.name, target, arg, arg !== target);
+          } else if (isFlatMapCall(target)) {
+            reportProducer(node.callee.name, target, arg, ".flatMap()");
+          } else if (isArrayStaticCall(target, "from")) {
+            reportProducer(node.callee.name, target, arg, "Array.from()");
+          } else if (isArrayStaticCall(target, "of")) {
+            reportProducer(node.callee.name, target, arg, "Array.of()");
           }
         }
       },

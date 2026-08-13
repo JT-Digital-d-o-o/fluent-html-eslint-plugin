@@ -18,6 +18,11 @@ The lint arm of fluent-html's `llm-styling/canonical-names` (pairs with fluent-h
 
 ### ✨ Added
 
+- **`prefer-nav-for-internal-links`** (warn, in `recommended`) — `A(…).setHref("/…")` with an internal literal path is a full-page reload that bypasses the typed route table; the rule points at `.nav(route)`. Escapes: external/protocol-relative URLs, non-literal hrefs (`resolve()`, variables), `setTarget` other than `"_self"`, `setDownload`/`toggle("download")`.
+- **`prefer-foreach` matches array-producing spreads beyond `.map()`** — `...Array.from({length: n}, (_, i) => …)` (autofixes to the `ForEach(n, (i) => …)` count overload when the element param is provably unused), `Array.from(iterable, cb)` (autofix: identical `(item, index)` contract), bare `Array.from(iterable)` (autofix to identity render), `.flatMap()` and `Array.of()` (report-only). Closes the audit escapee that survived the one repo with the lint installed.
+- **`no-ternary-in-view-builder` catches the variable-assignment form** — `const x = cond ? Tag : Tag` (and `x = cond ? Tag : Tag`) is flagged where both branches are element chains; the guidance points at `IfThenElse`/`Match`.
+- **`anchor-requires-cursor-pointer` skips verb-chained anchors** — the click verbs (`.nav`/`.tab`/`.submit`/`.fragment`/`.fire`) stamp `cursor-pointer` themselves as of the template's T4 enforcement, so a verb-chained anchor no longer needs (or gets flagged for) an explicit `.cursor("pointer")`.
+
 - **`require-satisfies-variant-object`** (error, in `recommended`) — an extracted variant style object passed by name (or spread into a variant object) bypasses TS excess-property spell-checking; the rule requires its declaration to be pinned with `satisfies VariantStyleObject`. Same-named non-fluent calls are guarded by a variant-key shape check; unresolvable names (imports, params) are skipped — the rule fires where the declaration is visible.
 - **Regenerated vocab tables** for the canonical surface (189 methods, 38 unit methods, 638 derived patterns).
 

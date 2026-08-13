@@ -413,12 +413,13 @@ runSuite("prefer-foreach", preferForeach, {
     { code: `f.select("role", OPTIONS.map((o) => ({ value: o })))` },
     { code: `const ids = items.map((i) => i.id)` },
     { code: `myFunc(items.map((i) => i.id))` },
-    // .flatMap() is not .map() and has no ForEach equivalent
-    { code: `Div(items.flatMap((i) => Li(i)))` },
     // .map().join(...) — the direct arg is .join, not .map
     { code: `Span(words.map((w) => w).join(", "))` },
     // Computed member — not a literal .map access
     { code: `Div(items["map"](fn))` },
+    // Array.from in a non-element call — data transform, not children
+    { code: `myFunc(Array.from(set))` },
+    { code: `const pages = Array.from({ length: n }, (_, i) => i + 1)` },
   ],
   invalid: [
     // Array-child form, named component, ForEach added to the import
@@ -456,6 +457,48 @@ runSuite("prefer-foreach", preferForeach, {
       code: `import { Div } from "fluent-html";\nDiv(...items.map(fn, thisArg))`,
       output: null,
       errors: [{ messageId: "preferForeach" }],
+    },
+    // The audit's escapee: count iteration via Array.from({length}) → ForEach count overload
+    {
+      code: `import { Div, ForEach } from "fluent-html";\nDiv(...Array.from({ length: 5 }, (_, i) => Dot(i)))`,
+      output: `import { Div, ForEach } from "fluent-html";\nDiv(ForEach(5, (i) => Dot(i)))`,
+      errors: [{ messageId: "preferForeachProducer" }],
+    },
+    // {length} form with the element param used — can't prove the rewrite, report only
+    {
+      code: `import { Div } from "fluent-html";\nDiv(...Array.from({ length: 5 }, (x, i) => Dot(x, i)))`,
+      output: null,
+      errors: [{ messageId: "preferForeachProducer" }],
+    },
+    // {length} form, index unused — zero-arg ForEach callback
+    {
+      code: `import { Div, ForEach } from "fluent-html";\nDiv(...Array.from({ length: n }, () => Skeleton()))`,
+      output: `import { Div, ForEach } from "fluent-html";\nDiv(ForEach(n, () => Skeleton()))`,
+      errors: [{ messageId: "preferForeachProducer" }],
+    },
+    // Array.from(iterable, cb) — same (item, index) contract as ForEach
+    {
+      code: `import { Div, ForEach } from "fluent-html";\nDiv(...Array.from(set, (v) => Li(v)))`,
+      output: `import { Div, ForEach } from "fluent-html";\nDiv(ForEach(set, (v) => Li(v)))`,
+      errors: [{ messageId: "preferForeachProducer" }],
+    },
+    // Array.from(iterable) without a mapper — identity render
+    {
+      code: `import { Div, ForEach } from "fluent-html";\nDiv(...Array.from(views))`,
+      output: `import { Div, ForEach } from "fluent-html";\nDiv(ForEach(views, (v) => v))`,
+      errors: [{ messageId: "preferForeachProducer" }],
+    },
+    // .flatMap() is array-producing too — flagged, no mechanical fix
+    {
+      code: `Div(items.flatMap((i) => Li(i)))`,
+      output: null,
+      errors: [{ messageId: "preferForeachProducer" }],
+    },
+    // Array.of spread — flagged, no fix
+    {
+      code: `Div(...Array.of(Li("a"), Li("b")))`,
+      output: null,
+      errors: [{ messageId: "preferForeachProducer" }],
     },
   ],
 });
@@ -767,7 +810,35 @@ runSuite("no-ternary-in-view-builder", noTernaryInViewBuilder, {
       code: `Div(isAdmin ? Span("Admin").font("bold") : Span("User"))`,
       errors: [{ messageId: "noTernaryInViewBuilder", data: { name: "Div" } }],
     },
+    // Variable-assignment form — the audit's escapee
+    {
+      code: `const badge = active ? Span("On") : Span("Off")`,
+      errors: [{ messageId: "noTernaryAssignment", data: { name: "badge" } }],
+    },
+    // Assignment (not declaration) form
+    {
+      code: `let panel; panel = admin ? Div("A") : Div("B")`,
+      errors: [{ messageId: "noTernaryAssignment", data: { name: "panel" } }],
+    },
+    // Chained elements on both sides
+    {
+      code: `const row = ok ? Td(v).bg("x") : Td("—")`,
+      errors: [{ messageId: "noTernaryAssignment", data: { name: "row" } }],
+    },
   ],
+});
+
+// no-ternary-in-view-builder — assignment form stays quiet on non-view ternaries
+runSuite("no-ternary-in-view-builder (assignment escapes)", noTernaryInViewBuilder, {
+  valid: [
+    // Value ternary — MatchValue territory, not this rule (both sides literals)
+    { code: `const cls = ok ? "success" : "danger"` },
+    // One side unknown — don't guess
+    { code: `const x = cond ? getPanel() : Div("fallback")` },
+    // Ternary over non-element calls
+    { code: `const y = cond ? fnA() : fnB()` },
+  ],
+  invalid: [],
 });
 
 // ------------------------------------
@@ -794,6 +865,16 @@ runSuite("anchor-requires-cursor-pointer", anchorRequiresCursorPointer, {
     { code: `Button("Go").setHref("/page")` },
     // A() with cursor("pointer") deep in chain
     { code: `A("Click").setHref("/page").setClass("text-blue-500").cursor("pointer").p("4")` },
+    // Verb-chained anchors — the click verbs stamp cursor-pointer themselves (T4)
+    { code: `A("Home").nav(routes.home())` },
+    { code: `A("Pending").tab(routes.list({ status: "pending" }))` },
+    { code: `A("Save").submit(routes.update())` },
+    { code: `A("More").fragment(ids.list, routes.page({ p: 2 }))` },
+    { code: `A("Dismiss").fire(routes.dismiss())` },
+    // Verb deep in the chain still counts
+    { code: `A("Home").p("2").nav(routes.home())` },
+    // Explicit non-pointer cursor + verb — the dev's cursor wins, verb skips, no flag
+    { code: `A("Drag").cursor("grab").nav(routes.home())` },
   ],
   invalid: [
     // A() without cursor
@@ -1569,6 +1650,49 @@ runTsSuite("require-satisfies-variant-object", requireSatisfiesVariantObject, {
     {
       code: `const inner = { bg: "gray-800" }; Div().dark({ hover: { ...inner } });`,
       errors: [{ messageId: "requireSatisfiesSpread" }],
+    },
+  ],
+});
+
+// ------------------------------------
+// prefer-nav-for-internal-links
+// ------------------------------------
+
+const preferNavForInternalLinks = require("../dist/rules/prefer-nav-for-internal-links");
+
+runSuite("prefer-nav-for-internal-links", preferNavForInternalLinks, {
+  valid: [
+    // The right pattern — typed route through .nav
+    { code: `A("Home").nav(routes.home())` },
+    // External URLs stay on setHref
+    { code: `A("Docs").setHref("https://example.com/docs")` },
+    { code: `A("CDN").setHref("//cdn.example.com/x")` },
+    { code: `A("Mail").setHref("mailto:hi@example.com")` },
+    // New-tab link — full load is the point
+    { code: `A("Report").setHref("/reports/1.pdf").setTarget("_blank")` },
+    // Download link
+    { code: `A("Export").setHref("/export.csv").setDownload("export.csv")` },
+    { code: `A("Export").setHref("/export.csv").toggle("download")` },
+    // Non-literal href — resolve()/variables are deliberate (OAuth redirects etc.)
+    { code: `A(label).setHref(oauthRoutes.authorize.resolve({ provider }))` },
+    { code: `A(s.label).setHref(s.id.selector)` },
+    // Not an anchor
+    { code: `Form().setHref("/x")` },
+  ],
+  invalid: [
+    {
+      code: `A("Settings").setHref("/settings")`,
+      errors: [{ messageId: "preferNav" }],
+    },
+    // Deep in a chain, styling around it
+    {
+      code: `A("Billing").p("2").setHref("/billing").cursor("pointer")`,
+      errors: [{ messageId: "preferNav" }],
+    },
+    // target="_self" is not an escape
+    {
+      code: `A("Home").setHref("/").setTarget("_self")`,
+      errors: [{ messageId: "preferNav" }],
     },
   ],
 });

@@ -26,6 +26,7 @@ import noTailwindInRawClass = require("./rules/no-tailwind-in-raw-class");
 import noDynamicClassArgument = require("./rules/no-dynamic-class-argument");
 import noTailwindInCssclass = require("./rules/no-tailwind-in-cssclass");
 import requireSatisfiesVariantObject = require("./rules/require-satisfies-variant-object");
+import preferNavForInternalLinks = require("./rules/prefer-nav-for-internal-links");
 
 const plugin = {
   rules: {
@@ -57,6 +58,7 @@ const plugin = {
     "no-dynamic-class-argument": noDynamicClassArgument,
     "no-tailwind-in-cssclass": noTailwindInCssclass,
     "require-satisfies-variant-object": requireSatisfiesVariantObject,
+    "prefer-nav-for-internal-links": preferNavForInternalLinks,
   },
   configs: {
     recommended: {
@@ -91,6 +93,7 @@ const plugin = {
         "fluent-html/no-removed-v4-utilities": "error",
         "fluent-html/no-raw-icon-string": "warn",
         "fluent-html/no-fluent-equivalent-in-setstyle": "warn",
+        "fluent-html/prefer-nav-for-internal-links": "warn",
       },
     },
   },
