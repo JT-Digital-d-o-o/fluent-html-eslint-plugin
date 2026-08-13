@@ -25,6 +25,13 @@
 // (runtime loading happens via require(esm) in loadClassVocab below).
 import type { UtilityDef } from "fluent-html/class-vocab" with { "resolution-mode": "import" };
 
+// 6.7.0 added `values` to UtilityDef; this branch pairs with 6.5.0 hosts whose
+// typings lack it. Widen locally — runtime reads it with optional chaining, so
+// pre-6.7.0 vocabs simply derive fewer exact-fix rows.
+type VocabDef = UtilityDef & {
+  values?: { kind: string; list: readonly string[] };
+};
+
 // Configuration for auto-fixable patterns
 export interface FixablePattern {
   // The prefix or exact string to match
@@ -135,7 +142,7 @@ const RESIDUE_PREFIXES: readonly FixablePattern[] = [
 // ── Vocab loading (peer dependency, require(esm)) ───────────────────
 
 type ClassVocabModule = {
-  classVocab: readonly UtilityDef[];
+  classVocab: readonly VocabDef[];
   emitClasses: (shape: UtilityDef["emit"], args?: readonly string[]) => string[];
 };
 

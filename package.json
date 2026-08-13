@@ -44,7 +44,7 @@
   "license": "ISC",
   "peerDependencies": {
     "eslint": ">=7.0.0",
-    "fluent-html": ">=6.7.0"
+    "fluent-html": ">=6.5.0"
   },
   "devDependencies": {
     "@types/eslint": "^8.0.0",

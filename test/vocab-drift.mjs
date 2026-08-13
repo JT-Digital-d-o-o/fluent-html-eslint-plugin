@@ -12,6 +12,15 @@ try {
   process.exit(0);
 }
 
+// This branch's snapshot is pinned to the 6.x vocab generation it ships with;
+// a sibling checkout on another major would report phantom drift.
+const { readFile } = await import("node:fs/promises");
+const sibling = JSON.parse(await readFile(new URL("../../fluent-html/package.json", import.meta.url), "utf8"));
+if (!sibling.version.startsWith("6.")) {
+  console.log(`[vocab-drift] sibling fluent-html is ${sibling.version} (not 6.x) — skipping drift check on this branch.`);
+  process.exit(0);
+}
+
 const { UNITS } = await import("../../fluent-html/dist/src/class-vocab/index.js");
 const { VOCAB_METHODS, UNIT_METHODS, VOCAB_UNITS } = await import("../dist/vocab.generated.js");
 

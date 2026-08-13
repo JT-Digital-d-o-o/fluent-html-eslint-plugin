@@ -107,7 +107,9 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
     {
       code: `Div().addClass("backdrop-blur-sm")`,
       output: `Div().backdropBlur("sm")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "backdrop-blur-sm", method: "backdropBlur('sm')" } }],
+      // 6.5.0 vocab has no `values` lists — the message falls back to the bare
+      // method (the autofix output above still carries the value via the prefix row).
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "backdrop-blur-sm", method: "backdropBlur()" } }],
     },
     // line-clamp
     {
@@ -137,7 +139,7 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
     {
       code: `Div().addClass("ease-out")`,
       output: `Div().ease("out")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "ease-out", method: "ease('out')" } }],
+      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "ease-out", method: "ease()" } }],
     },
     // addClass with single base utility
     {
@@ -205,39 +207,10 @@ runSuite("no-known-modifiers-in-setclass (addClass)", noKnownModifiersInSetclass
         { messageId: "useKnownModifier", data: { callee: "setClasses", className: "rounded", method: "rounded()" } },
       ],
     },
-    // addClass with list-disc
-    {
-      code: `Div().addClass("list-disc")`,
-      output: `Div().listStyleType("disc")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "list-disc", method: "listStyleType('disc')" } }],
-    },
-    // addClass with list-inside
-    {
-      code: `Div().addClass("list-inside")`,
-      output: `Div().listStylePosition("inside")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "list-inside", method: "listStylePosition('inside')" } }],
-    },
-    // addClass with list-disc list-inside combined
-    {
-      code: `Div().addClass("list-disc list-inside")`,
-      output: `Div().listStyleType("disc").listStylePosition("inside")`,
-      errors: [
-        { messageId: "useKnownModifier", data: { callee: "addClass", className: "list-disc", method: "listStyleType('disc')" } },
-        { messageId: "useKnownModifier", data: { callee: "addClass", className: "list-inside", method: "listStylePosition('inside')" } },
-      ],
-    },
-    // addClass with list-none
-    {
-      code: `Div().addClass("list-none")`,
-      output: `Div().listStyleType("none")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "list-none", method: "listStyleType('none')" } }],
-    },
-    // addClass with list-decimal
-    {
-      code: `Div().addClass("list-decimal")`,
-      output: `Div().listStyleType("decimal")`,
-      errors: [{ messageId: "useKnownModifier", data: { callee: "addClass", className: "list-decimal", method: "listStyleType('decimal')" } }],
-    },
+    // list-* is exacts-only (list- prefix is claimed by both listStyleType and
+    // listStylePosition); the exact rows come from `values` lists, which the
+    // 6.5.0 vocab this branch pairs with doesn't have — so list-* isn't
+    // derivable here. The ≥6.7.0 main line keeps flagging these.
   ],
 });
 
