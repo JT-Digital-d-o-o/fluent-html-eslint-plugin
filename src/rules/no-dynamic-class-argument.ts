@@ -43,7 +43,7 @@ const rule: Rule.RuleModule = {
         const arg = node.arguments[0];
         if (isStaticString(arg)) return;
 
-        const source = context.getSourceCode().getText(arg);
+        const source = context.sourceCode.getText(arg);
         context.report({
           node: arg,
           messageId: "dynamicArg",
