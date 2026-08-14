@@ -27,6 +27,9 @@ import noDynamicClassArgument = require("./rules/no-dynamic-class-argument");
 import noTailwindInCssclass = require("./rules/no-tailwind-in-cssclass");
 import requireSatisfiesVariantObject = require("./rules/require-satisfies-variant-object");
 import preferNavForInternalLinks = require("./rules/prefer-nav-for-internal-links");
+import preferMatch = require("./rules/prefer-match");
+import noDynamicTypedStylingArg = require("./rules/no-dynamic-typed-styling-arg");
+import matchSubsetDefault = require("./rules/match-subset-default");
 
 const plugin = {
   rules: {
@@ -59,6 +62,9 @@ const plugin = {
     "no-tailwind-in-cssclass": noTailwindInCssclass,
     "require-satisfies-variant-object": requireSatisfiesVariantObject,
     "prefer-nav-for-internal-links": preferNavForInternalLinks,
+    "prefer-match": preferMatch,
+    "no-dynamic-typed-styling-arg": noDynamicTypedStylingArg,
+    "match-subset-default": matchSubsetDefault,
   },
   configs: {
     recommended: {
@@ -94,6 +100,9 @@ const plugin = {
         "fluent-html/no-raw-icon-string": "warn",
         "fluent-html/no-fluent-equivalent-in-setstyle": "warn",
         "fluent-html/prefer-nav-for-internal-links": "warn",
+        "fluent-html/prefer-match": "warn",
+        "fluent-html/no-dynamic-typed-styling-arg": "error",
+        "fluent-html/match-subset-default": "error",
       },
     },
   },

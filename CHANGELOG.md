@@ -2,7 +2,28 @@
 
 All notable changes to `eslint-plugin-fluent-html` are documented here.
 
-## [Unreleased — 4.0.0] - Canonical names: fixes target the renamed/merged surface
+## [4.1.0] - 2026-08-14 - Control flow & exhaustiveness: the two leaking correction classes + the first type-aware rule
+
+The lint arm of the agent-fitness batch (prose-to-compiler candidates 4 and 12): the two correction classes that survived every earlier tool tier become lint findings, and the shipped-P1 Match-default gap gets the plugin's first type-aware rule.
+
+### ✨ Added
+
+- **`prefer-match`** (warn, 💡 suggestions, in `recommended`) — 2+ sibling `IfThen` calls whose conditions are `x.prop === literal` (or `ident === literal`) on one discriminant → merge into `Match(x, "prop", {…})` / `Match(x, {…})`; the consecutive `.when(x === lit, …)` chain twin → `.whenMatch(x, {…})`. **Suggestion-only by design, never an autofix**: whether the merged `Match` compiles depends on the discriminant's union (invisible syntactically — the IfThen chain renders nothing on fall-through, `Match` without a default must be exhaustive), and the fleet's correction census records autofix sweeps introducing bugs twice (rideshare `94ea427`, `1ced103`). The suggestion deliberately emits no default: a non-exhaustive result makes TypeScript name the missing members — the intended end state. Report-only (no suggestion) for non-consecutive siblings (merging would reorder the DOM), repeated literals (both branches render today), and non-zero-param branches.
+- **`no-dynamic-typed-styling-arg`** (error, in `recommended`) — the typed-surface twin of `no-dynamic-class-argument`: a non-literal argument into any of the 159 vocab-derived typed styling methods (`.bg(color)`, `.bg(BG[status])`, `.w("px", width)`, `.cssProp("mask-repeat", mode)`) is caught today only by the safelist extractor at css-build time, which single-pass agents never run. The message carries the extractor's own remediation (inline the literal / `staticManifest (defineTheme())`). Ternaries flag even with two literal branches — the extractor resolves literals only. False-positive guard for generic vocab names (`from`, `fill`, `relative`, `select`, `to`, …): the call must show fluent evidence — element-constructor root; a Tag-callback context (`.when`/`.whenElse`/`.apply` param, `.whenMatch` case-object branch or default, `Styler`/`StylerFor` annotation); or a function-parameter-rooted chain with a second typed link and a fluent-token-shaped string literal (no whitespace, no leading `#`/`.` — so d3/knex/gsap/sharp module chains never fire).
+- **`match-subset-default`** (error, in `recommended`) — the plugin's **first type-aware rule**: `Match(x, cases, default)` / `Match(x, "key", cases, default)` / `.whenMatch(x, cases, default)` over a discriminant the checker resolves to a finite string/number-literal union or enum, where the cases cover a strict subset — the default silently absorbs the missing members (the shipped Wise payment-status P1). Missing members are reported by name (numeric enums report `PENDING`, not `0`); full coverage plus a default reports the default as unreachable. Graceful no-op without type-aware parser services; bails on open `string`/`number`, non-literal union members, and computed/spread case keys.
+- **Type-aware test harness** — `test/type-aware.test.js` runs `RuleTester` through `@typescript-eslint/parser` against a fixture tsconfig (`test/fixtures/type-aware/`), the repo's first typed-program suite.
+- **Regenerated vocab tables for fluent-html 8.0.0** (159 methods, 37 unit methods — the surface prune deleted the hx verb aliases, the backdrop filters except `backdropBlur`, the mask/3D-transform/snap/place families, `breakBefore`/`breakAfter`, `scrollM`, `perspectiveOrigin`, `backface`, `isolation`, `hyphens`, `scheme`, `fieldSizing`). Residue fix-table rows and fixtures targeting pruned methods (`rotate-x-`/`scale-z-`/`skew-y-` prefixes, `mask-none`, the stale `snap-` owner) are gone with them; `no-conflicting-classes-in-setclass` keeps its `backdrop-*`/`skew-*` families — those are raw class-string conflict groups, and the Tailwind classes still exist.
+
+### 📦 Packaging
+
+- **`typescript` is a new optional peer** (`>=4.7.4`, `peerDependenciesMeta.optional`) — nothing imports it; the checker arrives via the consumer's parser services, and every other rule keeps working without it.
+- **`fluent-html` peer floor raised to `>=8.0.0`** — the fix tables derive from the 8.0.0 surface, and the pruned residue rows assume the pruned vocab (a 7.x vocab would trip the prefix-collision guard).
+
+### 📝 Deferred
+
+- **`MatchValue(value, cases, default)`** carries the identical subset-default hazard and the detection generalizes trivially, but the value-level fallback (`MatchValue(trend, { up: "↑", down: "↓" }, "→")`) is a taught intentional-subset idiom in the house guidelines — flagging it at error would indict doctrine, so it waits on its own severity decision.
+
+## [4.0.0] - 2026-08-14 - Canonical names: fixes target the renamed/merged surface
 
 The lint arm of fluent-html's `llm-styling/canonical-names` (pairs with fluent-html 7.0.0; peer bump lands with the release).
 

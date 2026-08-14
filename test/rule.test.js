@@ -1698,6 +1698,256 @@ runSuite("prefer-nav-for-internal-links", preferNavForInternalLinks, {
 });
 
 // ------------------------------------
+// prefer-match
+// ------------------------------------
+
+const preferMatch = require("../dist/rules/prefer-match");
+
+runSuite("prefer-match", preferMatch, {
+  valid: [
+    // Single IfThen — no chain
+    { code: `Div(IfThen(user.status === "ACTIVE", () => Badge()))` },
+    // Two IfThen on different discriminants
+    { code: `Div(IfThen(a.status === "x", () => A()), IfThen(b.kind === "y", () => B()))` },
+    // Match already in use
+    { code: `Div(Match(payment.status, { COMPLETED: () => Done(), FAILED: () => Retry() }))` },
+    // Only one equality condition — the other is a comparison
+    { code: `Div(IfThen(items.length > 0, () => List(items)), IfThen(flag === true, () => Empty()))` },
+    // IfThen calls in different parents are not siblings
+    { code: `Div(Div(IfThen(x.s === "a", () => A())), Div(IfThen(x.s === "b", () => B())))` },
+    // .when chain without discriminant equality
+    { code: `Badge(label).when(active, t => t.bg("success/10")).when(disabled, t => t.opacity("50"))` },
+    // Single .when equality link
+    { code: `Span(s).when(s === "active", t => t.bg("success/10")).p("2")` },
+    // Optional chaining discriminant is skipped
+    { code: `Div(IfThen(user?.status === "a", () => A()), IfThen(user?.status === "b", () => B()))` },
+  ],
+  invalid: [
+    // Member discriminant → key-form Match suggestion
+    {
+      code: `Div(IfThen(payment.status === "COMPLETED", () => RefundForm()), IfThen(payment.status === "FAILED", () => RetryBanner()))`,
+      errors: [{
+        messageId: "preferMatch",
+        suggestions: [{
+          messageId: "suggestMatch",
+          output: `Div(Match(payment, "status", { COMPLETED: () => RefundForm(), FAILED: () => RetryBanner() }))`,
+        }],
+      }],
+    },
+    // Identifier discriminant → value-form Match suggestion
+    {
+      code: `Div(IfThen(status === "active", () => Active()), IfThen(status === "closed", () => Closed()))`,
+      errors: [{
+        messageId: "preferMatch",
+        suggestions: [{
+          messageId: "suggestMatch",
+          output: `Div(Match(status, { active: () => Active(), closed: () => Closed() }))`,
+        }],
+      }],
+    },
+    // Three-link chain, quoted key for a non-identifier literal
+    {
+      code: `Div(IfThen(x.s === "a", () => A()), IfThen(x.s === "in-progress", () => B()), IfThen(x.s === "c", () => C()))`,
+      errors: [{
+        messageId: "preferMatch",
+        suggestions: [{
+          messageId: "suggestMatch",
+          output: `Div(Match(x, "s", { a: () => A(), "in-progress": () => B(), c: () => C() }))`,
+        }],
+      }],
+    },
+    // Numeric literal keys
+    {
+      code: `Div(IfThen(code === 1, () => A()), IfThen(code === 2, () => B()))`,
+      errors: [{
+        messageId: "preferMatch",
+        suggestions: [{
+          messageId: "suggestMatch",
+          output: `Div(Match(code, { 1: () => A(), 2: () => B() }))`,
+        }],
+      }],
+    },
+    // Reversed literal side still matches
+    {
+      code: `Div(IfThen("a" === x.s, () => A()), IfThen("b" === x.s, () => B()))`,
+      errors: [{ messageId: "preferMatch" }],
+    },
+    // Non-consecutive siblings — report, no suggestion (merging would reorder the DOM)
+    {
+      code: `Div(IfThen(x.s === "a", () => A()), Divider(), IfThen(x.s === "b", () => B()))`,
+      errors: [{ messageId: "preferMatch" }],
+    },
+    // Duplicate literal — report, no suggestion (both branches render today)
+    {
+      code: `Div(IfThen(x.s === "a", () => A()), IfThen(x.s === "a", () => B()))`,
+      errors: [{ messageId: "preferMatch" }],
+    },
+    // 1 and "1" coerce to the same object key — a merged cases object would
+    // silently drop a branch, so report without suggestion
+    {
+      code: `Div(IfThen(code === 1, () => A()), IfThen(code === "1", () => B()))`,
+      errors: [{ messageId: "preferMatch", suggestions: [] }],
+    },
+    // Non-function branch — report, no suggestion
+    {
+      code: `Div(IfThen(x.s === "a", viewA), IfThen(x.s === "b", viewB))`,
+      errors: [{ messageId: "preferMatch" }],
+    },
+    // .when chain twin → .whenMatch suggestion
+    {
+      code: `Span(s).when(s === "active", t => t.bg("success/10")).when(s === "closed", t => t.bg("surface-2"))`,
+      errors: [{
+        messageId: "preferWhenMatch",
+        suggestions: [{
+          messageId: "suggestWhenMatch",
+          output: `Span(s).whenMatch(s, { active: t => t.bg("success/10"), closed: t => t.bg("surface-2") })`,
+        }],
+      }],
+    },
+    // .when chain on a member discriminant
+    {
+      code: `Badge(o).when(o.state === "ok", t => t.text("success")).when(o.state === "err", t => t.text("danger"))`,
+      errors: [{
+        messageId: "preferWhenMatch",
+        suggestions: [{
+          messageId: "suggestWhenMatch",
+          output: `Badge(o).whenMatch(o.state, { ok: t => t.text("success"), err: t => t.text("danger") })`,
+        }],
+      }],
+    },
+  ],
+});
+
+// ------------------------------------
+// no-dynamic-typed-styling-arg
+// ------------------------------------
+
+const noDynamicTypedStylingArg = require("../dist/rules/no-dynamic-typed-styling-arg");
+
+runSuite("no-dynamic-typed-styling-arg", noDynamicTypedStylingArg, {
+  valid: [
+    // Literals
+    { code: `Div().bg("primary").p("6").rounded("card")` },
+    // Unit overload with literal amount
+    { code: `Div().w("px", 180).minH("rem", 12)` },
+    // Static template literal
+    { code: "Div().bg(`surface`)" },
+    // Negative literal
+    { code: `Div().z(-10)` },
+    // undefined skips the call
+    { code: `Div().border(undefined)` },
+    // cssProp with literal args
+    { code: `Div().cssProp("mask-repeat", "no-repeat")` },
+    // Vocab-named methods with no fluent evidence — never flagged
+    { code: `Array.from(items, (x) => renderRow(x))` },
+    { code: `path.relative(baseDir, file)` },
+    { code: `buffer.fill(value)` },
+    { code: `store.select(selectorFn)` },
+    // Bare single-link styler without annotation or fluent context (documented limitation)
+    { code: `const f = (t) => t.bg(color)` },
+    // Colliding non-fluent chains: vocab-named links on module objects never fire —
+    // the link-count gate needs a param-rooted receiver and token-shaped string evidence
+    { code: `sharp(input).rotate().resize(AVATAR_SIZE_PX, AVATAR_SIZE_PX, { fit: "cover" }).webp({ quality: 82 })` },
+    { code: `d3.select("#chart").transition().duration(dur)` },
+    { code: `d3.select("#label").text(d => d.label)` },
+    { code: `knex.select("id", "name").from(tableName)` },
+    { code: `gsap.timeline().to(".box", { x: 100 }).from(".other", { y: 50 })` },
+    // Non-vocab methods take anything
+    { code: `Div().setStyle("color", themeColor)` },
+    { code: `Div().addAttribute("data-x", value)` },
+  ],
+  invalid: [
+    // Identifier arg on an element-rooted chain
+    {
+      code: `Div().bg(color)`,
+      errors: [{ messageId: "dynamicArg", data: { method: "bg", argText: "color" } }],
+    },
+    // Unit overload with a dynamic amount
+    {
+      code: `Div().w("px", width)`,
+      errors: [{ messageId: "dynamicArg", data: { method: "w", argText: "width" } }],
+    },
+    // Member-expression lookup — the extractor's own headline example
+    {
+      code: `Div().bg(BG[status])`,
+      errors: [{ messageId: "dynamicArg", data: { method: "bg", argText: "BG[status]" } }],
+    },
+    // Ternary — even with two literal branches the extractor can't resolve it
+    {
+      code: `Div().bg(cond ? "primary" : "surface")`,
+      errors: [{ messageId: "dynamicArg", data: { method: "bg", argText: `cond ? "primary" : "surface"` } }],
+    },
+    // Interpolated template literal
+    {
+      code: "Div().text(`${tone}`)",
+      errors: [{ messageId: "dynamicArg", data: { method: "text", argText: "`${tone}`" } }],
+    },
+    // Call-expression arg
+    {
+      code: `Div().bg(pickColor())`,
+      errors: [{ messageId: "dynamicArg", data: { method: "bg", argText: "pickColor()" } }],
+    },
+    // Two vocab links make the chain fluent even without an element root
+    {
+      code: `const card = (t) => t.p("6").bg(color)`,
+      errors: [{ messageId: "dynamicArg", data: { method: "bg", argText: "color" } }],
+    },
+    // Callback param of a fluent context method
+    {
+      code: `Button("Save").when(isActive, (t) => t.bg(activeColor))`,
+      errors: [{ messageId: "dynamicArg", data: { method: "bg", argText: "activeColor" } }],
+    },
+    // whenMatch case-object branches are Tag callbacks too
+    {
+      code: `Span(s).whenMatch(s, { active: t => t.bg(BG[s]), closed: t => t.bg("surface-2") })`,
+      errors: [{ messageId: "dynamicArg", data: { method: "bg", argText: "BG[s]" } }],
+    },
+    // whenMatch default fn is a direct argument — covered by the context gate
+    {
+      code: `Span(s).whenMatch(s, { active: t => t.bg("success/10") }, t => t.bg(fallback))`,
+      errors: [{ messageId: "dynamicArg", data: { method: "bg", argText: "fallback" } }],
+    },
+    // Match branches receive values, not Tags — their output chains root at
+    // element constructors, so the existing evidence already covers them
+    {
+      code: `Match(x, "status", { PENDING: () => Span(label).bg(STATUS_BG[x.status]) })`,
+      errors: [{ messageId: "dynamicArg", data: { method: "bg", argText: "STATUS_BG[x.status]" } }],
+    },
+    // cssProp with a dynamic value
+    {
+      code: `Div().cssProp("mask-repeat", repeatMode)`,
+      errors: [{ messageId: "dynamicArg", data: { method: "cssProp", argText: "repeatMode" } }],
+    },
+    // Deep chain keeps the element root
+    {
+      code: `Span(label).p("2").text(SIZES[level]).rounded("control")`,
+      errors: [{ messageId: "dynamicArg", data: { method: "text", argText: "SIZES[level]" } }],
+    },
+  ],
+});
+
+runTsSuite("no-dynamic-typed-styling-arg (Styler annotations)", noDynamicTypedStylingArg, {
+  valid: [
+    // Unrelated annotation, single link, no fluent context
+    { code: `const f: Mapper = (t) => t.bg(color);` },
+    // Annotated styler with literal args
+    { code: `const card: Styler = (t) => t.p("6").bg("surface").rounded("card");` },
+  ],
+  invalid: [
+    // Styler-annotated single-link body
+    {
+      code: `const accent: Styler = (t) => t.bg(color);`,
+      errors: [{ messageId: "dynamicArg", data: { method: "bg", argText: "color" } }],
+    },
+    // StylerFor — the everyframe dynamic styler-map shape
+    {
+      code: `const byStatus: StylerFor<Status> = (s) => (t) => t.bg(BG[s]);`,
+      errors: [{ messageId: "dynamicArg", data: { method: "bg", argText: "BG[s]" } }],
+    },
+  ],
+});
+
+// ------------------------------------
 // Summary
 // ------------------------------------
 

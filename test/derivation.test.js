@@ -85,11 +85,11 @@ check("bg-linear keyword directions are exact; the rest is an angle — both .bg
   assert.deepEqual({ m: exact("bg-linear-to-br")?.methodName, v: exact("bg-linear-to-br")?.fixedValue }, { m: "bgLinear", v: "to-br" });
   assert.equal(prefix("bg-linear-")?.methodName, "bgLinear");
 });
-check("merged border/list/mask families fix to the canonical method", () => {
+check("merged border/list families fix to the canonical method (mask pruned in 8.0.0)", () => {
   assert.deepEqual({ m: exact("border-dashed")?.methodName, v: exact("border-dashed")?.fixedValue }, { m: "border", v: "dashed" });
   assert.equal(prefix("border-")?.methodName, "border");
   assert.deepEqual({ m: exact("list-disc")?.methodName, v: exact("list-disc")?.fixedValue }, { m: "list", v: "disc" });
-  assert.deepEqual({ m: exact("mask-add")?.methodName, v: exact("mask-add")?.fixedValue }, { m: "mask", v: "add" });
+  assert.equal(exact("mask-add"), undefined);
   assert.deepEqual({ m: exact("outline-hidden")?.methodName, v: exact("outline-hidden")?.fixedValue }, { m: "outline", v: "hidden" });
 });
 check("modifier map renders two-arg exacts", () => {
@@ -109,8 +109,8 @@ check("autofixes through the derived table", () => {
       { code: `Div().setClass("stroke-red-500")`, output: `Div().stroke("red-500")`, errors: 1 },
       { code: `Div().setClass("decoration-wavy")`, output: `Div().decoration("wavy")`, errors: 1 },
       { code: `Div().setClass("translate-x-2")`, output: `Div().translate("x", "2")`, errors: 1 },
-      { code: `Div().setClass("snap-align-none")`, output: `Div().snapAlign("none")`, errors: 1 },
-      { code: `Div().setClass("scale-3d rotate-x-45")`, output: `Div().scale3d().rotateX("45")`, errors: 2 },
+      { code: `Div().setClass("backdrop-blur-sm")`, output: `Div().backdropBlur("sm")`, errors: 1 },
+      { code: `Div().setClass("rotate-45 break-inside-avoid")`, output: `Div().rotate("45").breakInside("avoid")`, errors: 2 },
     ],
   });
 });

@@ -7,7 +7,7 @@
 //
 // Derivation rules:
 //  - `values.literals` rows → one EXACT pattern per member (via the row's own
-//    emit fn, so e.g. snapAlign "none" → `snap-align-none`); spacing rows also
+//    emit fn, so e.g. decoration "wavy" → `decoration-wavy`); spacing rows also
 //    get x/y directional exacts.
 //  - `static` rows → exact patterns; `optional` rows → a bare exact.
 //  - every non-custom row → a prefix pattern, UNLESS the prefix is claimed by
@@ -55,12 +55,12 @@ const PREFERRED_EXACTS: Readonly<Record<string, { methodName: string; fixedValue
  * residue exacts below carve out widths/sizes first. `null` = exacts only.
  * Canonical-names shrank this table: the merges leave one method per prefix,
  * so only the directional-shorthand overlaps (`px-` is both `.p("x", …)` and
- * `.px(…)` — the shorthand is the canonical fix) and `snap-` remain.
+ * `.px(…)` — the shorthand is the canonical fix) remain (the 8.0.0 surface
+ * prune deleted the `snap` family, retiring its entry).
  */
 const RESIDUE_PREFIX_OWNERS: Readonly<Record<string, string | null>> = {
   "px-": "px", "py-": "py", "pt-": "pt", "pb-": "pb", "pl-": "pl", "pr-": "pr",
   "mx-": "mx", "my-": "my", "mt-": "mt", "mb-": "mb", "ml-": "ml", "mr-": "mr",
-  "snap-": null,                  // axis/strictness args don't fit value extraction
 };
 
 /** Exact patterns the derivation cannot see (custom rows, width-vs-color carve-outs). */
@@ -85,8 +85,6 @@ const RESIDUE_EXACTS: readonly FixablePattern[] = [
   ...["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl", "7xl", "8xl", "9xl"].map((v) => ({ pattern: `text-${v}`, methodName: "text", exactMatch: true, fixedValue: v })),
   // font families (theme-ns --font)
   ...["sans", "serif", "mono"].map((v) => ({ pattern: `font-${v}`, methodName: "font", exactMatch: true, fixedValue: v })),
-  // mask image arm (custom row; the composite literals derive from the group)
-  { pattern: "mask-none", methodName: "mask", exactMatch: true, fixedValue: "none" },
   // bare radial/conic gradients (custom rows)
   { pattern: "bg-radial", methodName: "bgRadial", exactMatch: true },
   { pattern: "bg-conic", methodName: "bgConic", exactMatch: true },
@@ -111,15 +109,7 @@ const RESIDUE_PREFIXES: readonly FixablePattern[] = [
   { pattern: "bg-gradient-", methodName: "bgLinear" },
   { pattern: "translate-x-", methodName: "translate", direction: "x" },
   { pattern: "translate-y-", methodName: "translate", direction: "y" },
-  { pattern: "rotate-x-", methodName: "rotateX" },
-  { pattern: "rotate-y-", methodName: "rotateY" },
-  { pattern: "rotate-z-", methodName: "rotateZ" },
   { pattern: "rotate-", methodName: "rotate" },
-  { pattern: "scale-x-", methodName: "scaleX" },
-  { pattern: "scale-y-", methodName: "scaleY" },
-  { pattern: "scale-z-", methodName: "scaleZ" },
-  { pattern: "skew-x-", methodName: "skewX" },
-  { pattern: "skew-y-", methodName: "skewY" },
   { pattern: "col-start-", methodName: "colStart" },
   { pattern: "col-end-", methodName: "colEnd" },
   { pattern: "row-start-", methodName: "rowStart" },
