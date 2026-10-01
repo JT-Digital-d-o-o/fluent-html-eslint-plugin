@@ -4,13 +4,17 @@
 
 ## Current Focus
 
-Behavior v4 lint rules (W6 of the fluent-html behavior redesign) — the rules that make
-the v4 policies mechanical instead of disciplinary. Work starts when W1 (emission core)
-settles the grammar. See [behaviors-v4/prd.md](behaviors-v4/prd.md).
+The plugin half of the fluent-html v8.2.0 review run. Plugin 4.2.0 comes first: it makes
+`no-tailwind-in-raw-class` autofixes and the dynamic-argument rewrites compile and stops
+`prefer-set-method` autofixing a raw href, and no lib release gates it. See
+[review-v8.2/prd.md](review-v8.2/prd.md).
 
 ## Next Up
 
-- behaviors-v4 rules after fluent-html W1 lands (the attribute grammar they pattern-match on)
+- plugin 4.2.0 (fix contract, per-shape dynamic-arg messages, `preferBrandedSetter`): the template 3.8.0 lock bump and the guidelines G1 deletions wait on it
+- plugin 4.3.0 (`prefer-if-not-empty`, `prefer-size`, fix-contract re-sweep): waits on fluent-html 8.2.0, because both rules read its new surface
+- fix-contract re-sweeps, each waiting on a fluent-html devDependency move (8.1.1 unless 4.2.0 already swept it, then 9.0.0): `gen:vocab --check` fails until each lands
+- behaviors-v4 rules, waiting on fluent-html W1 (the attribute grammar they pattern-match on)
 
 ## Blocked on a Decision
 
