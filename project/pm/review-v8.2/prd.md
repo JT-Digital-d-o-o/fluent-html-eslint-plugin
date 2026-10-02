@@ -17,7 +17,7 @@ A plugin minor per publish step of `fluent-html/project/research/v8.2.0/40-synth
 
 ## Solution
 
-- **4.2.0:** RFC-C-01 (an oracle-swept fix contract for `no-tailwind-in-raw-class`, with `.cssProp()` successors and a type-aware host guard), RFC-D-01 (dynamic-argument messages picked by argument shape, every printed rewrite compiled in `npm test`), RFC-B-03's plugin half (`preferBrandedSetter`, no autofix into a branded href). One README commit carries C-01 and D-01.
+- **4.2.0:** RFC-C-01 (an oracle-swept fix contract for `no-tailwind-in-raw-class`, with `.cssProp()` successors and a type-aware host guard), RFC-D-01 (dynamic-argument messages picked by argument shape, every printed rewrite compiled in `npm test`), RFC-B-03's plugin half (`preferBrandedSetter`, no autofix into a branded href). One README commit carries C-01, D-01 and B-03 (the staged 4.2.0 patch holds all three).
 - **4.3.0:** RFC-E-07 `prefer-if-not-empty` (type-aware), RFC-E-08 `prefer-size` and the `no-fluent-equivalent-in-setstyle` `.size` suggestion, and RFC-C-01's fix-contract re-sweep against 8.2.0.
 - **Re-sweep after 9.0.0:** move the devDependency, re-run `npm run gen:vocab`, commit the regenerated contract.
 - **Docs:** README hunks are staged as patches and CHANGELOG entries as fragments (`CHANGELOG.entry.md`, pasted directly above the newest `## [` version header) under `fluent-html/project/research/v8.2.0/60-rollout/staged/fluent-html-eslint-plugin/<release>/`, applied by the story that ships that release. The 4.3.0 README patch is generated on top of the 4.2.0 one.
@@ -25,8 +25,8 @@ A plugin minor per publish step of `fluent-html/project/research/v8.2.0/40-synth
 
 ## Rabbit Holes
 
-- **No plugin CI.** The repo has no workflow, so `npm test` is the gate and runs locally. C-01, D-01 and B-03 were each measured on a separate prototype: re-run every suite on the merged branch.
-- **Split lib sources.** `scripts/gen-vocab.mjs:16` reads the sibling checkout (`fluent-html/dist`), while the fix contract compiles against `node_modules/fluent-html`. Build the sibling at the devDependency's commit before `npm run gen:vocab`, or the vocab and the contract describe different libs.
+- **No plugin CI.** The repo has no workflow, so `npm test` is the gate and runs locally. C-01, D-01 and B-03 were each measured on a separate prototype: re-run every suite on `main` once all three are committed.
+- **Split lib sources.** `scripts/gen-vocab.mjs:16` reads the sibling checkout (`fluent-html/dist`), and the Tailwind design system loads from it too (`:31`), while the fix contract compiles against `node_modules/fluent-html`. Keep the sibling at the devDependency's commit before `npm run gen:vocab` (its `dist/` is committed, so no build; `npm ci` there brings tailwindcss), or the vocab and the contract describe different libs.
 - **Rule overlap.** ``.addClass(`bg-${color}`)`` must get only D-01's `fragment` report: C-01's contract withholds tokens from a template literal with substitutions (to confirm at implementation).
 - **Unexecuted wording.** The `ForEachElse` report of `prefer-if-not-empty`, the `prefer-size` suggestion and the setStyle `.size` suggestion have no executed text yet: set and test them at implementation (lockstep §5 blocker 8).
 - **Preset hazard.** `prefer-size` must never autofix a chain it cannot prove clean: `Div().apply(card).w("10").h("10")` with `card` setting `w-4 h-6` goes from 40×40 to 16×24 once folded.
