@@ -1429,7 +1429,7 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     // keyword props
     {
       code: `Div().setStyle("white-space:nowrap")`,
-      errors: [{ messageId: "useFluentEquivalent", data: { decl: "white-space: nowrap", suggestion: ".whitespace(…)" } }],
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "white-space: nowrap", suggestion: '.whitespace("nowrap")' } }],
     },
     {
       code: `Div().setStyle("display:flex;position:absolute")`,
@@ -1615,6 +1615,29 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
       code: `Img().setStyle("object-position:50% 15%")`,
       errors: [{ messageId: "useFluentEquivalent", data: { decl: "object-position: 50% 15%", suggestion: '.object("[50%_15%]")' } }],
     },
+    // keyword props pass the CSS value through when fluent's union has it
+    {
+      code: `Button().setStyle("cursor:pointer;overflow-x:hidden")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "cursor: pointer", suggestion: '.cursor("pointer")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "overflow-x: hidden", suggestion: '.overflow("x", "hidden")' } },
+      ],
+    },
+    {
+      code: `Div().setStyles({ overflow: "auto", whiteSpace: "pre-wrap" })`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "overflow: auto", suggestion: '.overflow("auto")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "white-space: pre-wrap", suggestion: '.whitespace("pre-wrap")' } },
+      ],
+    },
+    // outside fluent's union: the placeholder stays
+    {
+      code: `P().setStyle("text-align:start;overflow-y:overlay")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "text-align: start", suggestion: ".text(…)" } },
+        { messageId: "useFluentEquivalent", data: { decl: "overflow-y: overlay", suggestion: '.overflow("y", …)' } },
+      ],
+    },
     // multi-value shorthand
     {
       code: `Div().setStyle("padding:26px 24px 24px 28px")`,
@@ -1625,7 +1648,7 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
       code: `Div().setStyles({ fontSize: "14px", textAlign: "center" })`,
       errors: [
         { messageId: "useFluentEquivalent", data: { decl: "font-size: 14px", suggestion: '.text("px", 14)' } },
-        { messageId: "useFluentEquivalent", data: { decl: "text-align: center", suggestion: ".text(…)" } },
+        { messageId: "useFluentEquivalent", data: { decl: "text-align: center", suggestion: '.text("center")' } },
       ],
     },
     {

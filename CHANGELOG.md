@@ -18,6 +18,7 @@ All notable changes to `eslint-plugin-fluent-html` are documented here.
 
 ### 🐛 Fixed
 
+- **`no-fluent-equivalent-in-setstyle` names the exact call for keyword properties**: `white-space`, `text-align`, `cursor` and `overflow` (`-x`/`-y`) suggest `.whitespace("nowrap")`, `.text("center")`, `.cursor("pointer")`, `.overflow("x", "hidden")` instead of a `(…)` placeholder when fluent's union has the value. The `overflow-x`/`-y` hint also said `.overflow("x-…")`, which doesn't type-check; it's now `.overflow("x", …)`. Values outside the union keep the placeholder.
 - **`backdrop` is a known variant head**, matching fluent-html's `TailwindState`. `no-tailwind-in-raw-class` now reports `.addClass("backdrop:bg-black/50")` / `.setClass(…)` (it skipped them), and both it and `no-tailwind-in-cssclass` autofix to `.variant("backdrop", { bg: "black/50" })`.
 
 ## [4.1.0] - 2026-08-14 - Control flow & exhaustiveness: the two leaking correction classes + the first type-aware rule

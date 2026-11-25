@@ -52,8 +52,27 @@ const VALUE_PROPS: Record<string, string> = {
   opacity: "opacity",
   cursor: "cursor",
   overflow: "overflow",
-  "overflow-x": 'overflow("x-…")',
-  "overflow-y": 'overflow("y-…")',
+  "overflow-x": 'overflow("x", …)',
+  "overflow-y": 'overflow("y", …)',
+};
+
+// VALUE_PROPS whose CSS keyword is fluent's argument verbatim: a value in fluent's union gets the
+// exact call; anything else keeps the VALUE_PROPS placeholder.
+const CURSORS = new Set([
+  "auto", "default", "pointer", "wait", "text", "move", "help", "not-allowed", "none", "context-menu",
+  "progress", "cell", "crosshair", "vertical-text", "alias", "copy", "no-drop", "grab", "grabbing",
+  "all-scroll", "col-resize", "row-resize", "n-resize", "e-resize", "s-resize", "w-resize", "ne-resize",
+  "nw-resize", "se-resize", "sw-resize", "ew-resize", "ns-resize", "nesw-resize", "nwse-resize",
+  "zoom-in", "zoom-out",
+]);
+const OVERFLOW = new Set(["auto", "hidden", "clip", "visible", "scroll"]);
+const KEYWORD_ARG_PROPS: Record<string, { method: string; values: ReadonlySet<string>; axis?: "x" | "y" }> = {
+  "white-space": { method: "whitespace", values: new Set(["normal", "nowrap", "pre", "pre-line", "pre-wrap", "break-spaces"]) },
+  "text-align": { method: "text", values: new Set(["left", "center", "right", "justify"]) },
+  cursor: { method: "cursor", values: CURSORS },
+  overflow: { method: "overflow", values: OVERFLOW },
+  "overflow-x": { method: "overflow", values: OVERFLOW, axis: "x" },
+  "overflow-y": { method: "overflow", values: OVERFLOW, axis: "y" },
 };
 
 // CSS property → fluent color method; flagged only for plain hex / white / black / transparent
@@ -248,6 +267,12 @@ function suggestionFor(prop: string, value: string): string | null {
     const m = UNIT_VALUE_RE.exec(value);
     if (m) return `.${unitMethod}("${m[2]}", ${m[1]})`;
     return `.${unitMethod}(…)`;
+  }
+
+  const keywordArg = KEYWORD_ARG_PROPS[prop];
+  const keyword = value.toLowerCase();
+  if (keywordArg?.values.has(keyword)) {
+    return `.${keywordArg.method}(${keywordArg.axis ? `"${keywordArg.axis}", ` : ""}"${keyword}")`;
   }
 
   const valueMethod = VALUE_PROPS[prop];
