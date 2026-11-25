@@ -160,19 +160,31 @@ function bgPositionSuggestion(value: string): string {
   return keyword ? `.bg("${keyword}")` : `.bg("[position:${bracket(value)}]")`;
 }
 
-// A lone blur() is the one functional value with a fluent form: .backdropBlur(), whose class also
-// emits -webkit-backdrop-filter. Default-scale px steps map to the keyword, other lengths to [..].
-const BACKDROP_FILTER_PROPS = new Set(["backdrop-filter", "-webkit-backdrop-filter"]);
-const BLUR_RE = /^blur\(\s*(\d+(?:\.\d+)?(?:px|rem|em))\s*\)$/i;
+// A single filter function is the one functional value with a fluent form: blur() → .blur() /
+// .backdropBlur() (the backdrop class also emits -webkit-backdrop-filter), drop-shadow() →
+// .dropShadow(). Chained functions stay inline: Tailwind composes filters in a fixed order.
+const FILTER_BLUR_METHOD: Record<string, string> = {
+  filter: "blur",
+  "backdrop-filter": "backdropBlur",
+  "-webkit-backdrop-filter": "backdropBlur",
+};
+const FILTER_FUNCTION_RE = /^([a-z-]+)\(([^()]*)\)$/i;
+const BLUR_LENGTH_RE = /^\d+(?:\.\d+)?(?:px|rem|em)$/i;
 const BLUR_SCALE: Record<string, string> = {
   "4px": "xs", "8px": "sm", "12px": "md", "16px": "lg", "24px": "xl", "40px": "2xl", "64px": "3xl",
 };
 
-function backdropBlurSuggestion(value: string): string | null {
-  const m = BLUR_RE.exec(value);
+function filterSuggestion(prop: string, value: string): string | null {
+  const m = FILTER_FUNCTION_RE.exec(value);
   if (!m) return null;
-  const length = m[1].toLowerCase();
-  return `.backdropBlur("${BLUR_SCALE[length] ?? `[${length}]`}")`;
+  const fn = m[1].toLowerCase();
+  const arg = m[2].trim().toLowerCase();
+  if (fn === "blur" && BLUR_LENGTH_RE.test(arg)) {
+    return `.${FILTER_BLUR_METHOD[prop]}("${BLUR_SCALE[arg] ?? `[${arg}]`}")`;
+  }
+  // A static drop shadow; the named steps carry rgb() colors no hand-written value matches.
+  if (fn === "drop-shadow" && prop === "filter" && arg) return `.dropShadow("[${bracket(m[2])}]")`;
+  return null;
 }
 
 // The named text-shadow steps are layered shadows no hand-written value matches, so a static
@@ -263,10 +275,10 @@ const rule: Rule.RuleModule = {
     function checkDecl(node: any, prop: string, value: string) {
       if (ignored.has(prop)) return;
       // Dynamic (interpolated) or functional values (rgba, color-mix, clamp, var, url, gradients,
-      // calc) are the legitimate escape hatch, except a lone backdrop blur().
+      // calc) are the legitimate escape hatch, except a single blur() or drop-shadow() filter.
       if (value.includes(EXPR) || prop.includes(EXPR)) return;
-      const suggestion = BACKDROP_FILTER_PROPS.has(prop)
-        ? backdropBlurSuggestion(value)
+      const suggestion = prop in FILTER_BLUR_METHOD
+        ? filterSuggestion(prop, value)
         : value.includes("(")
           ? null
           : suggestionFor(prop, value);

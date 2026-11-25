@@ -1356,6 +1356,11 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     // backdrop filters beyond a lone static blur() have no fluent equivalent
     { code: `Div().setStyle("backdrop-filter:blur(8px) saturate(1.5)")` },
     { code: `Div().setStyle("backdrop-filter:blur(var(--glass-blur))")` },
+    // chained filters, functional shadow colors and other filter functions stay inline
+    { code: `Img().setStyle("filter:blur(2px) drop-shadow(0 1px 2px #000)")` },
+    { code: `Img().setStyle("filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3))")` },
+    { code: `Img().setStyle("filter:grayscale(1)")` },
+    { code: `Div().setStyle("backdrop-filter:drop-shadow(0 1px 2px #000)")` },
     // text-shadow with a functional color stays inline, like other colors
     { code: `H1().setStyle("text-shadow:0 1px 2px rgba(0,0,0,0.4)")` },
     // aspect-ratio values .aspect() can't express stay inline
@@ -1515,6 +1520,19 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     {
       code: `Div().setStyles({ backdropFilter: "blur(6px)" })`,
       errors: [{ messageId: "useFluentEquivalent", data: { decl: "backdrop-filter: blur(6px)", suggestion: '.backdropBlur("[6px]")' } }],
+    },
+    // filter: a single blur() or drop-shadow()
+    {
+      code: `Img().setStyle("filter:blur(16px)")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "filter: blur(16px)", suggestion: '.blur("lg")' } }],
+    },
+    {
+      code: `Img().setStyles({ filter: "blur(0.5rem)" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "filter: blur(0.5rem)", suggestion: '.blur("[0.5rem]")' } }],
+    },
+    {
+      code: `Img().setStyle("filter:drop-shadow(0 1px 2px #000)")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "filter: drop-shadow(0 1px 2px #000)", suggestion: '.dropShadow("[0_1px_2px_#000]")' } }],
     },
     // text-shadow: none, or the [..] arm
     {
