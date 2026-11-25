@@ -66,6 +66,28 @@ const CURSORS = new Set([
   "zoom-in", "zoom-out",
 ]);
 const OVERFLOW = new Set(["auto", "hidden", "clip", "visible", "scroll"]);
+// font-weight numbers → fluent's names (Tailwind's default scale); other numbers → [..].
+const FONT_WEIGHTS: Record<string, string> = {
+  "100": "thin", "200": "extralight", "300": "light", "400": "normal", "500": "medium",
+  "600": "semibold", "700": "bold", "800": "extrabold", "900": "black", normal: "normal", bold: "bold",
+};
+
+function fontWeightSuggestion(value: string): string | null {
+  const v = value.toLowerCase();
+  if (FONT_WEIGHTS[v]) return `.font("${FONT_WEIGHTS[v]}")`;
+  return /^\d{1,3}$/.test(v) ? `.font("[${v}]")` : null;
+}
+
+// opacity 0–1 or a percentage → fluent's steps of 5; anything off a step → [..].
+function opacitySuggestion(value: string): string | null {
+  const m = /^(\d*\.?\d+)(%?)$/.exec(value);
+  if (!m) return null;
+  const percent = m[2] ? Number(m[1]) : Number(m[1]) * 100;
+  if (percent > 100) return null;
+  const step = Math.round(percent * 1000) / 1000;
+  return Number.isInteger(step) && step % 5 === 0 ? `.opacity("${step}")` : `.opacity("[${value}]")`;
+}
+
 const KEYWORD_ARG_PROPS: Record<string, { method: string; values: ReadonlySet<string>; axis?: "x" | "y" }> = {
   "white-space": { method: "whitespace", values: new Set(["normal", "nowrap", "pre", "pre-line", "pre-wrap", "break-spaces"]) },
   "text-align": { method: "text", values: new Set(["left", "center", "right", "justify"]) },
@@ -268,6 +290,9 @@ function suggestionFor(prop: string, value: string): string | null {
     if (m) return `.${unitMethod}("${m[2]}", ${m[1]})`;
     return `.${unitMethod}(…)`;
   }
+
+  if (prop === "font-weight") return fontWeightSuggestion(value) ?? ".font(…)";
+  if (prop === "opacity") return opacitySuggestion(value) ?? ".opacity(…)";
 
   const keywordArg = KEYWORD_ARG_PROPS[prop];
   const keyword = value.toLowerCase();

@@ -1630,6 +1630,35 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
         { messageId: "useFluentEquivalent", data: { decl: "white-space: pre-wrap", suggestion: '.whitespace("pre-wrap")' } },
       ],
     },
+    // font-weight: numbers → names, other numbers → [..]; opacity: → steps of 5, else [..]
+    {
+      code: `Span().setStyle("font-weight:600;opacity:0.5")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "font-weight: 600", suggestion: '.font("semibold")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "opacity: 0.5", suggestion: '.opacity("50")' } },
+      ],
+    },
+    {
+      code: `Span().setStyles({ fontWeight: 450, opacity: 0.33 })`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "font-weight: 450", suggestion: '.font("[450]")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "opacity: 0.33", suggestion: '.opacity("[0.33]")' } },
+      ],
+    },
+    {
+      code: `Span().setStyle("font-weight:bold;opacity:75%")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "font-weight: bold", suggestion: '.font("bold")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "opacity: 75%", suggestion: '.opacity("75")' } },
+      ],
+    },
+    {
+      code: `Span().setStyle("font-weight:bolder;opacity:0")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "font-weight: bolder", suggestion: ".font(…)" } },
+        { messageId: "useFluentEquivalent", data: { decl: "opacity: 0", suggestion: '.opacity("0")' } },
+      ],
+    },
     // outside fluent's union: the placeholder stays
     {
       code: `P().setStyle("text-align:start;overflow-y:overlay")`,
