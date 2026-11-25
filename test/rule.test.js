@@ -1353,8 +1353,11 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     { code: `Div().setStyle("font-size:clamp(2.3rem,4.6vw,3.3rem)")` },
     { code: `Div().setStyle("border-top:1px solid var(--color-border)")` },
     { code: `Div().setStyles({ backgroundImage: "url('/img.png')" })` },
-    // properties with no fluent equivalent
-    { code: `Div().setStyle("backdrop-filter:blur(4px)")` },
+    // backdrop filters beyond a lone static blur() have no fluent equivalent
+    { code: `Div().setStyle("backdrop-filter:blur(8px) saturate(1.5)")` },
+    { code: `Div().setStyle("backdrop-filter:blur(var(--glass-blur))")` },
+    // text-shadow with a functional color stays inline, like other colors
+    { code: `H1().setStyle("text-shadow:0 1px 2px rgba(0,0,0,0.4)")` },
     // aspect-ratio values .aspect() can't express stay inline
     { code: `Div().setStyle("aspect-ratio:inherit")` },
     { code: "Div().setStyle(`aspect-ratio:${w}/${h}`)" },
@@ -1499,6 +1502,28 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
         { messageId: "useFluentEquivalent", data: { decl: "background-attachment: local", suggestion: '.bg("local")' } },
         { messageId: "useFluentEquivalent", data: { decl: "background-origin: border-box", suggestion: '.bg("origin-border")' } },
       ],
+    },
+    // backdrop-filter: lone blur() → backdropBlur keyword on the default scale, else [..];
+    // the -webkit- twin is covered by the same class
+    {
+      code: `Div().setStyle("backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "backdrop-filter: blur(8px)", suggestion: '.backdropBlur("sm")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "-webkit-backdrop-filter: blur(8px)", suggestion: '.backdropBlur("sm")' } },
+      ],
+    },
+    {
+      code: `Div().setStyles({ backdropFilter: "blur(6px)" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "backdrop-filter: blur(6px)", suggestion: '.backdropBlur("[6px]")' } }],
+    },
+    // text-shadow: none, or the [..] arm
+    {
+      code: `H1().setStyle("text-shadow:0 1px 2px #000")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "text-shadow: 0 1px 2px #000", suggestion: '.textShadow("[0_1px_2px_#000]")' } }],
+    },
+    {
+      code: `H1().setStyles({ textShadow: "none" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "text-shadow: none", suggestion: '.textShadow("none")' } }],
     },
     // object-position: keywords in either order, or the [..] arm
     {

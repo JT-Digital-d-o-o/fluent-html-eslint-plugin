@@ -160,6 +160,27 @@ function bgPositionSuggestion(value: string): string {
   return keyword ? `.bg("${keyword}")` : `.bg("[position:${bracket(value)}]")`;
 }
 
+// A lone blur() is the one functional value with a fluent form: .backdropBlur(), whose class also
+// emits -webkit-backdrop-filter. Default-scale px steps map to the keyword, other lengths to [..].
+const BACKDROP_FILTER_PROPS = new Set(["backdrop-filter", "-webkit-backdrop-filter"]);
+const BLUR_RE = /^blur\(\s*(\d+(?:\.\d+)?(?:px|rem|em))\s*\)$/i;
+const BLUR_SCALE: Record<string, string> = {
+  "4px": "xs", "8px": "sm", "12px": "md", "16px": "lg", "24px": "xl", "40px": "2xl", "64px": "3xl",
+};
+
+function backdropBlurSuggestion(value: string): string | null {
+  const m = BLUR_RE.exec(value);
+  if (!m) return null;
+  const length = m[1].toLowerCase();
+  return `.backdropBlur("${BLUR_SCALE[length] ?? `[${length}]`}")`;
+}
+
+// The named text-shadow steps are layered shadows no hand-written value matches, so a static
+// shadow goes to the [..] arm.
+function textShadowSuggestion(value: string): string {
+  return value.toLowerCase() === "none" ? '.textShadow("none")' : `.textShadow("[${bracket(value)}]")`;
+}
+
 type Decl = { prop: string; value: string };
 
 function parseDeclarations(css: string): Decl[] {
@@ -181,6 +202,7 @@ function suggestionFor(prop: string, value: string): string | null {
   if (prop === "aspect-ratio") return aspectSuggestion(value);
   if (prop === "background-size") return bgSizeSuggestion(value);
   if (prop === "background-position") return bgPositionSuggestion(value);
+  if (prop === "text-shadow") return textShadowSuggestion(value);
   if (prop === "object-position") return objectPositionSuggestion(value);
 
   const unitMethod = UNIT_PROPS[prop];
@@ -241,9 +263,13 @@ const rule: Rule.RuleModule = {
     function checkDecl(node: any, prop: string, value: string) {
       if (ignored.has(prop)) return;
       // Dynamic (interpolated) or functional values (rgba, color-mix, clamp, var, url, gradients,
-      // calc) are the legitimate escape hatch — never flagged.
-      if (value.includes(EXPR) || prop.includes(EXPR) || value.includes("(")) return;
-      const suggestion = suggestionFor(prop, value);
+      // calc) are the legitimate escape hatch, except a lone backdrop blur().
+      if (value.includes(EXPR) || prop.includes(EXPR)) return;
+      const suggestion = BACKDROP_FILTER_PROPS.has(prop)
+        ? backdropBlurSuggestion(value)
+        : value.includes("(")
+          ? null
+          : suggestionFor(prop, value);
       if (!suggestion) return;
       context.report({
         node,
