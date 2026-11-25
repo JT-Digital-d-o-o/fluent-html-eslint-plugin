@@ -1372,6 +1372,7 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     // text-indent: interpolated or functional values stay inline
     { code: "P().setStyle(`text-indent:${level * 2}em`)" },
     { code: `P().setStyle("text-indent:calc(1em + 4px)")` },
+    { code: "Img().setStyle(`vertical-align:${offset}px`)" },
     // aspect-ratio values .aspect() can't express stay inline
     { code: `Div().setStyle("aspect-ratio:inherit")` },
     { code: "Div().setStyle(`aspect-ratio:${w}/${h}`)" },
@@ -1587,6 +1588,15 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     {
       code: `P().setStyles({ textIndent: "1.5em hanging" })`,
       errors: [{ messageId: "useFluentEquivalent", data: { decl: "text-indent: 1.5em hanging", suggestion: '.cssProp("text-indent", "1.5em hanging")' } }],
+    },
+    // vertical-align: same, no typed method
+    {
+      code: `Img().setStyle("vertical-align:middle")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "vertical-align: middle", suggestion: '.cssProp("vertical-align", "middle")' } }],
+    },
+    {
+      code: `Svg().setStyles({ verticalAlign: "-0.125em" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "vertical-align: -0.125em", suggestion: '.cssProp("vertical-align", "-0.125em")' } }],
     },
     // object-position: keywords in either order, or the [..] arm
     {

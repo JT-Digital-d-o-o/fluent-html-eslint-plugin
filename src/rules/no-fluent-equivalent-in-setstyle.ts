@@ -195,6 +195,8 @@ function shadowSuggestion(method: string, value: string): string {
   return value.toLowerCase() === "none" ? `.${method}("none")` : `.${method}("[${bracket(value)}]")`;
 }
 
+const CSS_PROP_ONLY = new Set(["text-indent", "vertical-align"]);
+
 const MIX_BLEND_MODES = new Set([
   "normal", "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
   "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity",
@@ -230,7 +232,7 @@ function suggestionFor(prop: string, value: string): string | null {
   if (prop === "background-position") return bgPositionSuggestion(value);
   if (prop in SHADOW_METHOD) return shadowSuggestion(SHADOW_METHOD[prop], value);
   // No typed method; a static value is still .cssProp()'s job, not an inline style.
-  if (prop === "text-indent") return `.cssProp("text-indent", "${value}")`;
+  if (CSS_PROP_ONLY.has(prop)) return `.cssProp("${prop}", "${value}")`;
   const blend = BLEND_PROPS[prop];
   if (blend) {
     const mode = value.toLowerCase();
