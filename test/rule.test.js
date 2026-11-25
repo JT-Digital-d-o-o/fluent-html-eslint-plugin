@@ -1366,6 +1366,9 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     { code: `Div().setStyle("box-shadow:0 4px 12px rgb(0 0 0 / 0.1)")` },
     // mix-blend-mode values outside the fluent union stay inline
     { code: `Div().setStyle("mix-blend-mode:inherit")` },
+    // no bg-blend-plus-*, and multi-layer lists have no single class
+    { code: `Div().setStyle("background-blend-mode:plus-lighter")` },
+    { code: `Div().setStyle("background-blend-mode:multiply, screen")` },
     // aspect-ratio values .aspect() can't express stay inline
     { code: `Div().setStyle("aspect-ratio:inherit")` },
     { code: "Div().setStyle(`aspect-ratio:${w}/${h}`)" },
@@ -1563,6 +1566,15 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     {
       code: `Div().setStyles({ mixBlendMode: "plus-lighter" })`,
       errors: [{ messageId: "useFluentEquivalent", data: { decl: "mix-blend-mode: plus-lighter", suggestion: '.mixBlend("plus-lighter")' } }],
+    },
+    // background-blend-mode: keyword → .bgBlend()
+    {
+      code: `Div().setStyles({ backgroundBlendMode: "luminosity" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-blend-mode: luminosity", suggestion: '.bgBlend("luminosity")' } }],
+    },
+    {
+      code: `Div().setStyle("background-image:url(/a.jpg);background-blend-mode:multiply")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-blend-mode: multiply", suggestion: '.bgBlend("multiply")' } }],
     },
     // object-position: keywords in either order, or the [..] arm
     {

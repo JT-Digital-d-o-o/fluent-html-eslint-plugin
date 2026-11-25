@@ -200,6 +200,12 @@ const MIX_BLEND_MODES = new Set([
   "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity",
   "plus-darker", "plus-lighter",
 ]);
+// Tailwind has no bg-blend-plus-*, and fluent's TailwindBgBlendMode matches.
+const BG_BLEND_MODES = new Set([...MIX_BLEND_MODES].filter((m) => !m.startsWith("plus-")));
+const BLEND_PROPS: Record<string, { method: string; modes: Set<string> }> = {
+  "mix-blend-mode": { method: "mixBlend", modes: MIX_BLEND_MODES },
+  "background-blend-mode": { method: "bgBlend", modes: BG_BLEND_MODES },
+};
 
 type Decl = { prop: string; value: string };
 
@@ -223,9 +229,10 @@ function suggestionFor(prop: string, value: string): string | null {
   if (prop === "background-size") return bgSizeSuggestion(value);
   if (prop === "background-position") return bgPositionSuggestion(value);
   if (prop in SHADOW_METHOD) return shadowSuggestion(SHADOW_METHOD[prop], value);
-  if (prop === "mix-blend-mode") {
+  const blend = BLEND_PROPS[prop];
+  if (blend) {
     const mode = value.toLowerCase();
-    return MIX_BLEND_MODES.has(mode) ? `.mixBlend("${mode}")` : null;
+    return blend.modes.has(mode) ? `.${blend.method}("${mode}")` : null;
   }
   if (prop === "object-position") return objectPositionSuggestion(value);
 
