@@ -1499,6 +1499,12 @@ runSuite("no-tailwind-in-raw-class", noTailwindInRawClass, {
       output: `Div().variant("peer-invalid", { text: "red-600" })`,
       errors: [{ messageId: "replaceWith" }],
     },
+    // backdrop is a TailwindState head (fluent-html 8.2): a <dialog>'s ::backdrop
+    {
+      code: `Dialog().addClass("backdrop:bg-black/50")`,
+      output: `Dialog().variant("backdrop", { bg: "black/50" })`,
+      errors: [{ messageId: "replaceWith" }],
+    },
     // bare optional utility under a variant → boolean-true entry
     {
       code: `Div().addClass("focus:ring")`,
@@ -1607,6 +1613,11 @@ runSuite("no-tailwind-in-cssclass", noTailwindInCssclass, {
     {
       code: `Div().cssClass("hover:bg-blue-600")`,
       output: `Div().hover({ bg: "blue-600" })`,
+      errors: [{ messageId: "tailwindInCssClass" }],
+    },
+    {
+      code: `Dialog().cssClass("backdrop:bg-black/50")`,
+      output: `Dialog().variant("backdrop", { bg: "black/50" })`,
       errors: [{ messageId: "tailwindInCssClass" }],
     },
   ],

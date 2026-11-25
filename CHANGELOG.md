@@ -2,6 +2,12 @@
 
 All notable changes to `eslint-plugin-fluent-html` are documented here.
 
+## [Unreleased]
+
+### 🐛 Fixed
+
+- **`backdrop` is a known variant head**, matching fluent-html's `TailwindState`. `no-tailwind-in-raw-class` now reports `.addClass("backdrop:bg-black/50")` / `.setClass(…)` (it skipped them), and both it and `no-tailwind-in-cssclass` autofix to `.variant("backdrop", { bg: "black/50" })`.
+
 ## [4.1.0] - 2026-08-14 - Control flow & exhaustiveness: the two leaking correction classes + the first type-aware rule
 
 The lint arm of the agent-fitness batch (prose-to-compiler candidates 4 and 12): the two correction classes that survived every earlier tool tier become lint findings, and the shipped-P1 Match-default gap gets the plugin's first type-aware rule.
