@@ -1360,6 +1360,7 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     { code: "Div().setStyle(`aspect-ratio:${w}/${h}`)" },
     { code: "Img().setStyle(`object-position:50% ${y}%`)" },
     { code: `Div().setStyle("background-size:calc(100% - 2rem) auto")` },
+    { code: "Div().setStyle(`background-position:${x}px center`)" },
     // mixed: static part of a template decl touching an expression is skipped
     { code: "Div().setStyle(`margin: ${x}px 0`)" },
     // non-literal arg — skipped
@@ -1447,6 +1448,19 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     {
       code: `Div().setStyle("background-size:50% auto")`,
       errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-size: 50% auto", suggestion: '.bg("[length:50%_auto]")' } }],
+    },
+    // background-position: same keyword mapping, or the [position:..] arm
+    {
+      code: `Div().setStyles({ backgroundPosition: "right top" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-position: right top", suggestion: '.bg("top-right")' } }],
+    },
+    {
+      code: `Div().setStyle("background-position:center")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-position: center", suggestion: '.bg("center")' } }],
+    },
+    {
+      code: `Div().setStyle("background-position:right 0.875rem center")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-position: right 0.875rem center", suggestion: '.bg("[position:right_0.875rem_center]")' } }],
     },
     // object-position: keywords in either order, or the [..] arm
     {

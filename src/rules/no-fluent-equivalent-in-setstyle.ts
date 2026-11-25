@@ -113,17 +113,25 @@ function bgSizeSuggestion(value: string): string {
 const VERTICAL = new Set(["top", "bottom"]);
 const HORIZONTAL = new Set(["left", "right"]);
 
-// object-position keywords in either order ("center top", "left top") → fluent's names
-// ("top", "top-left"); anything else (percentages, lengths) → the [..] arm.
-function objectPositionSuggestion(value: string): string {
+// Position keywords in either order ("center top", "left top") → fluent's names ("top",
+// "top-left"), shared by object-position and background-position; null for anything else.
+function positionKeyword(value: string): string | null {
   const words = value.toLowerCase().split(/\s+/);
   const vertical = words.filter((w) => VERTICAL.has(w));
   const horizontal = words.filter((w) => HORIZONTAL.has(w));
   const keywordsOnly = words.length <= 2 && words.every((w) => w === "center" || VERTICAL.has(w) || HORIZONTAL.has(w));
-  if (keywordsOnly && vertical.length <= 1 && horizontal.length <= 1) {
-    return `.object("${[...vertical, ...horizontal].join("-") || "center"}")`;
-  }
-  return `.object("[${bracket(value)}]")`;
+  if (!keywordsOnly || vertical.length > 1 || horizontal.length > 1) return null;
+  return [...vertical, ...horizontal].join("-") || "center";
+}
+
+function objectPositionSuggestion(value: string): string {
+  const keyword = positionKeyword(value);
+  return keyword ? `.object("${keyword}")` : `.object("[${bracket(value)}]")`;
+}
+
+function bgPositionSuggestion(value: string): string {
+  const keyword = positionKeyword(value);
+  return keyword ? `.bg("${keyword}")` : `.bg("[position:${bracket(value)}]")`;
 }
 
 type Decl = { prop: string; value: string };
@@ -146,6 +154,7 @@ const camelToKebab = (s: string): string => s.replace(/[A-Z]/g, (c) => `-${c.toL
 function suggestionFor(prop: string, value: string): string | null {
   if (prop === "aspect-ratio") return aspectSuggestion(value);
   if (prop === "background-size") return bgSizeSuggestion(value);
+  if (prop === "background-position") return bgPositionSuggestion(value);
   if (prop === "object-position") return objectPositionSuggestion(value);
 
   const unitMethod = UNIT_PROPS[prop];

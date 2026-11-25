@@ -7,7 +7,7 @@ All notable changes to `eslint-plugin-fluent-html` are documented here.
 ### ✨ Added
 
 - **`no-fluent-equivalent-in-setstyle` flags static `aspect-ratio`**, now that fluent-html's `.aspect()` takes ratios: `setStyle("aspect-ratio:16/9")` suggests `.aspect("16/9")`, a decimal ratio or single number suggests the bracket arm (`.aspect("[1.91/1]")`), and `auto` suggests `.aspect("auto")`. Interpolated and other values stay inline.
-- **…and static `background-size` and `object-position`**, now that `.bg()` and `.object()` take them: `background-size: cover` suggests `.bg("cover")` and a length `.bg("[length:50%_auto]")`; `object-position` keywords in either order map to fluent's names (`center top` → `.object("top")`, `left bottom` → `.object("bottom-left")`), other values to `.object("[50%_15%]")`.
+- **…and static `background-size`, `background-position` and `object-position`**, now that `.bg()` and `.object()` take them: `background-size: cover` suggests `.bg("cover")` and a length `.bg("[length:50%_auto]")`; `background-position` keywords map like `object-position`'s (`right top` → `.bg("top-right")`), other values to `.bg("[position:right_0.875rem_center]")`; `object-position` keywords in either order map to fluent's names (`center top` → `.object("top")`, `left bottom` → `.object("bottom-left")`), other values to `.object("[50%_15%]")`.
 
 ### 🐛 Fixed
 
