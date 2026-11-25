@@ -1361,6 +1361,9 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     { code: "Img().setStyle(`object-position:50% ${y}%`)" },
     { code: `Div().setStyle("background-size:calc(100% - 2rem) auto")` },
     { code: "Div().setStyle(`background-position:${x}px center`)" },
+    // background-repeat / -clip values with no single fluent keyword, and the prefixed clip
+    { code: `Div().setStyle("background-repeat:round space")` },
+    { code: `Div().setStyle("-webkit-background-clip:text")` },
     // mixed: static part of a template decl touching an expression is skipped
     { code: "Div().setStyle(`margin: ${x}px 0`)" },
     // non-literal arg — skipped
@@ -1461,6 +1464,25 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     {
       code: `Div().setStyle("background-position:right 0.875rem center")`,
       errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-position: right 0.875rem center", suggestion: '.bg("[position:right_0.875rem_center]")' } }],
+    },
+    // background-repeat and background-clip: keyword → fixed .bg() argument
+    {
+      code: `Div().setStyles({ backgroundRepeat: "no-repeat", backgroundClip: "text" })`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "background-repeat: no-repeat", suggestion: '.bg("no-repeat")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "background-clip: text", suggestion: '.bg("clip-text")' } },
+      ],
+    },
+    {
+      code: `Div().setStyle("background-repeat:round;background-clip:padding-box")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "background-repeat: round", suggestion: '.bg("repeat-round")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "background-clip: padding-box", suggestion: '.bg("clip-padding")' } },
+      ],
+    },
+    {
+      code: `Div().setStyle("background-repeat:repeat no-repeat")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-repeat: repeat no-repeat", suggestion: '.bg("repeat-x")' } }],
     },
     // object-position: keywords in either order, or the [..] arm
     {

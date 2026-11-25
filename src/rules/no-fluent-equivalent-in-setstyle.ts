@@ -65,7 +65,7 @@ const COLOR_PROPS: Record<string, string> = {
   "border-color": "border",
 };
 
-// display / position keyword values → dedicated fluent methods.
+// Keyword values → dedicated fluent methods or a fixed argument.
 const KEYWORD_PROPS: Record<string, Record<string, string>> = {
   display: {
     none: "hidden()",
@@ -84,6 +84,22 @@ const KEYWORD_PROPS: Record<string, Record<string, string>> = {
     fixed: "fixed()",
     sticky: "sticky()",
     static: "static()",
+  },
+  "background-repeat": {
+    repeat: 'bg("repeat")',
+    "no-repeat": 'bg("no-repeat")',
+    "repeat-x": 'bg("repeat-x")',
+    "repeat-y": 'bg("repeat-y")',
+    round: 'bg("repeat-round")',
+    space: 'bg("repeat-space")',
+    "repeat no-repeat": 'bg("repeat-x")',
+    "no-repeat repeat": 'bg("repeat-y")',
+  },
+  "background-clip": {
+    "border-box": 'bg("clip-border")',
+    "padding-box": 'bg("clip-padding")',
+    "content-box": 'bg("clip-content")',
+    text: 'bg("clip-text")',
   },
 };
 
