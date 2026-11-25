@@ -7,6 +7,7 @@ All notable changes to `eslint-plugin-fluent-html` are documented here.
 ### ✨ Added
 
 - **`no-fluent-equivalent-in-setstyle` flags static `aspect-ratio`**, now that fluent-html's `.aspect()` takes ratios: `setStyle("aspect-ratio:16/9")` suggests `.aspect("16/9")`, a decimal ratio or single number suggests the bracket arm (`.aspect("[1.91/1]")`), and `auto` suggests `.aspect("auto")`. Interpolated and other values stay inline.
+- **…and `text-indent`**: fluent-html has no typed method for it, so a static value suggests `.cssProp("text-indent", "2em")`, which compiles to `[text-indent:2em]`. Interpolated and functional values (`calc()`) stay inline.
 - **…and `background-blend-mode`**: a keyword suggests `.bgBlend("multiply")` etc. `plus-darker` / `plus-lighter` (no `bg-blend-*` class) and multi-layer lists stay inline.
 - **…and `box-shadow` and `mix-blend-mode`**: `box-shadow: none` suggests `.shadow("none")` and a static shadow `.shadow("[inset_0_1px_2px_#000]")` (a shadow with an `rgb()`/`rgba()` color stays inline); a `mix-blend-mode` keyword suggests `.mixBlend("multiply")` etc.
 - **…and a lone `filter: blur()` or `filter: drop-shadow()`**: `blur(16px)` suggests `.blur("lg")` on the default scale and `.blur("[0.5rem]")` off it; a static `drop-shadow(0 1px 2px #000)` suggests `.dropShadow("[0_1px_2px_#000]")`. Chained filter functions and a drop shadow with an `rgba()` color stay inline.

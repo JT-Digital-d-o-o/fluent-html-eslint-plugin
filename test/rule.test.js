@@ -1369,6 +1369,9 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     // no bg-blend-plus-*, and multi-layer lists have no single class
     { code: `Div().setStyle("background-blend-mode:plus-lighter")` },
     { code: `Div().setStyle("background-blend-mode:multiply, screen")` },
+    // text-indent: interpolated or functional values stay inline
+    { code: "P().setStyle(`text-indent:${level * 2}em`)" },
+    { code: `P().setStyle("text-indent:calc(1em + 4px)")` },
     // aspect-ratio values .aspect() can't express stay inline
     { code: `Div().setStyle("aspect-ratio:inherit")` },
     { code: "Div().setStyle(`aspect-ratio:${w}/${h}`)" },
@@ -1575,6 +1578,15 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     {
       code: `Div().setStyle("background-image:url(/a.jpg);background-blend-mode:multiply")`,
       errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-blend-mode: multiply", suggestion: '.bgBlend("multiply")' } }],
+    },
+    // text-indent: no typed method, so a static value goes to .cssProp()
+    {
+      code: `P().setStyle("text-indent:2em")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "text-indent: 2em", suggestion: '.cssProp("text-indent", "2em")' } }],
+    },
+    {
+      code: `P().setStyles({ textIndent: "1.5em hanging" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "text-indent: 1.5em hanging", suggestion: '.cssProp("text-indent", "1.5em hanging")' } }],
     },
     // object-position: keywords in either order, or the [..] arm
     {

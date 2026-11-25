@@ -229,6 +229,8 @@ function suggestionFor(prop: string, value: string): string | null {
   if (prop === "background-size") return bgSizeSuggestion(value);
   if (prop === "background-position") return bgPositionSuggestion(value);
   if (prop in SHADOW_METHOD) return shadowSuggestion(SHADOW_METHOD[prop], value);
+  // No typed method; a static value is still .cssProp()'s job, not an inline style.
+  if (prop === "text-indent") return `.cssProp("text-indent", "${value}")`;
   const blend = BLEND_PROPS[prop];
   if (blend) {
     const mode = value.toLowerCase();
