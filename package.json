@@ -57,7 +57,7 @@
     "@types/node": "^20.0.0",
     "@typescript-eslint/parser": "^5.62.0",
     "eslint": "^8.0.0",
-    "fluent-html": "github:JT-Digital-d-o-o/fluent-html#7cf5b2300a3b041049c6ec247efe84b20a272098",
+    "fluent-html": "^8.1.0",
     "typescript": "^5.0.0"
   },
   "engines": {
