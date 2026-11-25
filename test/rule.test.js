@@ -1352,12 +1352,14 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     { code: `Div().setStyle("border-color:color-mix(in srgb, red 50%, blue)")` },
     { code: `Div().setStyle("font-size:clamp(2.3rem,4.6vw,3.3rem)")` },
     { code: `Div().setStyle("border-top:1px solid var(--color-border)")` },
-    { code: `Div().setStyles({ backgroundImage: "url('/img.png')", backgroundSize: "cover" })` },
+    { code: `Div().setStyles({ backgroundImage: "url('/img.png')" })` },
     // properties with no fluent equivalent
     { code: `Div().setStyle("backdrop-filter:blur(4px)")` },
     // aspect-ratio values .aspect() can't express stay inline
     { code: `Div().setStyle("aspect-ratio:inherit")` },
     { code: "Div().setStyle(`aspect-ratio:${w}/${h}`)" },
+    { code: "Img().setStyle(`object-position:50% ${y}%`)" },
+    { code: `Div().setStyle("background-size:calc(100% - 2rem) auto")` },
     // mixed: static part of a template decl touching an expression is skipped
     { code: "Div().setStyle(`margin: ${x}px 0`)" },
     // non-literal arg — skipped
@@ -1436,6 +1438,32 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     {
       code: `Div().setStyle("aspect-ratio:auto")`,
       errors: [{ messageId: "useFluentEquivalent", data: { decl: "aspect-ratio: auto", suggestion: '.aspect("auto")' } }],
+    },
+    // background-size: keyword, or the [length:..] arm
+    {
+      code: `Div().setStyles({ backgroundImage: "url('/img.png')", backgroundSize: "cover" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-size: cover", suggestion: '.bg("cover")' } }],
+    },
+    {
+      code: `Div().setStyle("background-size:50% auto")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-size: 50% auto", suggestion: '.bg("[length:50%_auto]")' } }],
+    },
+    // object-position: keywords in either order, or the [..] arm
+    {
+      code: `Img().setStyle("object-position:center top")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "object-position: center top", suggestion: '.object("top")' } }],
+    },
+    {
+      code: `Img().setStyles({ objectPosition: "left bottom" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "object-position: left bottom", suggestion: '.object("bottom-left")' } }],
+    },
+    {
+      code: `Img().setStyle("object-position:center")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "object-position: center", suggestion: '.object("center")' } }],
+    },
+    {
+      code: `Img().setStyle("object-position:50% 15%")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "object-position: 50% 15%", suggestion: '.object("[50%_15%]")' } }],
     },
     // multi-value shorthand
     {
