@@ -1352,10 +1352,37 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     { code: `Div().setStyle("border-color:color-mix(in srgb, red 50%, blue)")` },
     { code: `Div().setStyle("font-size:clamp(2.3rem,4.6vw,3.3rem)")` },
     { code: `Div().setStyle("border-top:1px solid var(--color-border)")` },
-    { code: `Div().setStyles({ backgroundImage: "url('/img.png')", backgroundSize: "cover" })` },
-    // properties with no fluent equivalent
-    { code: `Div().setStyle("aspect-ratio:16/9")` },
-    { code: `Div().setStyle("backdrop-filter:blur(4px)")` },
+    { code: `Div().setStyles({ backgroundImage: "url('/img.png')" })` },
+    // backdrop filters beyond a lone static blur() have no fluent equivalent
+    { code: `Div().setStyle("backdrop-filter:blur(8px) saturate(1.5)")` },
+    { code: `Div().setStyle("backdrop-filter:blur(var(--glass-blur))")` },
+    // chained filters, functional shadow colors and other filter functions stay inline
+    { code: `Img().setStyle("filter:blur(2px) drop-shadow(0 1px 2px #000)")` },
+    { code: `Img().setStyle("filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3))")` },
+    { code: `Img().setStyle("filter:grayscale(1)")` },
+    { code: `Div().setStyle("backdrop-filter:drop-shadow(0 1px 2px #000)")` },
+    // text-shadow with a functional color stays inline, like other colors
+    { code: `H1().setStyle("text-shadow:0 1px 2px rgba(0,0,0,0.4)")` },
+    { code: `Div().setStyle("box-shadow:0 4px 12px rgb(0 0 0 / 0.1)")` },
+    // mix-blend-mode values outside the fluent union stay inline
+    { code: `Div().setStyle("mix-blend-mode:inherit")` },
+    // no bg-blend-plus-*, and multi-layer lists have no single class
+    { code: `Div().setStyle("background-blend-mode:plus-lighter")` },
+    { code: `Div().setStyle("background-blend-mode:multiply, screen")` },
+    // text-indent: interpolated or functional values stay inline
+    { code: "P().setStyle(`text-indent:${level * 2}em`)" },
+    { code: `P().setStyle("text-indent:calc(1em + 4px)")` },
+    { code: "Img().setStyle(`vertical-align:${offset}px`)" },
+    // aspect-ratio values .aspect() can't express stay inline
+    { code: `Div().setStyle("aspect-ratio:inherit")` },
+    { code: "Div().setStyle(`aspect-ratio:${w}/${h}`)" },
+    { code: "Img().setStyle(`object-position:50% ${y}%`)" },
+    { code: `Div().setStyle("background-size:calc(100% - 2rem) auto")` },
+    { code: "Div().setStyle(`background-position:${x}px center`)" },
+    // background-repeat / -clip values with no single fluent keyword, and the prefixed clip
+    { code: `Div().setStyle("background-repeat:round space")` },
+    { code: `Div().setStyle("-webkit-background-clip:text")` },
+    { code: `Div().setStyle("background-attachment:fixed, scroll")` },
     // mixed: static part of a template decl touching an expression is skipped
     { code: "Div().setStyle(`margin: ${x}px 0`)" },
     // non-literal arg — skipped
@@ -1402,13 +1429,254 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     // keyword props
     {
       code: `Div().setStyle("white-space:nowrap")`,
-      errors: [{ messageId: "useFluentEquivalent", data: { decl: "white-space: nowrap", suggestion: ".whitespace(…)" } }],
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "white-space: nowrap", suggestion: '.whitespace("nowrap")' } }],
     },
     {
       code: `Div().setStyle("display:flex;position:absolute")`,
       errors: [
         { messageId: "useFluentEquivalent", data: { decl: "display: flex", suggestion: ".flex()" } },
         { messageId: "useFluentEquivalent", data: { decl: "position: absolute", suggestion: ".absolute()" } },
+      ],
+    },
+    // aspect-ratio: integer ratio arm, [..] for decimals, keyword for auto
+    {
+      code: `Div().setStyle("aspect-ratio:16/9;background:#000")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "aspect-ratio: 16/9", suggestion: '.aspect("16/9")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "background: #000", suggestion: ".bg(…) with a theme token" } },
+      ],
+    },
+    {
+      code: `Img().setStyle("aspect-ratio: 4 / 5")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "aspect-ratio: 4 / 5", suggestion: '.aspect("4/5")' } }],
+    },
+    {
+      code: `Img().setStyle("aspect-ratio:1.91 / 1")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "aspect-ratio: 1.91 / 1", suggestion: '.aspect("[1.91/1]")' } }],
+    },
+    {
+      code: `Div().setStyles({ aspectRatio: 1.5 })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "aspect-ratio: 1.5", suggestion: '.aspect("[1.5]")' } }],
+    },
+    {
+      code: `Div().setStyle("aspect-ratio:auto")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "aspect-ratio: auto", suggestion: '.aspect("auto")' } }],
+    },
+    // background-size: keyword, or the [length:..] arm
+    {
+      code: `Div().setStyles({ backgroundImage: "url('/img.png')", backgroundSize: "cover" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-size: cover", suggestion: '.bg("cover")' } }],
+    },
+    {
+      code: `Div().setStyle("background-size:50% auto")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-size: 50% auto", suggestion: '.bg("[length:50%_auto]")' } }],
+    },
+    // background-position: same keyword mapping, or the [position:..] arm
+    {
+      code: `Div().setStyles({ backgroundPosition: "right top" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-position: right top", suggestion: '.bg("top-right")' } }],
+    },
+    {
+      code: `Div().setStyle("background-position:center")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-position: center", suggestion: '.bg("center")' } }],
+    },
+    {
+      code: `Div().setStyle("background-position:right 0.875rem center")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-position: right 0.875rem center", suggestion: '.bg("[position:right_0.875rem_center]")' } }],
+    },
+    // background-repeat and background-clip: keyword → fixed .bg() argument
+    {
+      code: `Div().setStyles({ backgroundRepeat: "no-repeat", backgroundClip: "text" })`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "background-repeat: no-repeat", suggestion: '.bg("no-repeat")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "background-clip: text", suggestion: '.bg("clip-text")' } },
+      ],
+    },
+    {
+      code: `Div().setStyle("background-repeat:round;background-clip:padding-box")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "background-repeat: round", suggestion: '.bg("repeat-round")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "background-clip: padding-box", suggestion: '.bg("clip-padding")' } },
+      ],
+    },
+    {
+      code: `Div().setStyle("background-repeat:repeat no-repeat")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-repeat: repeat no-repeat", suggestion: '.bg("repeat-x")' } }],
+    },
+    // background-attachment and background-origin: keyword → fixed .bg() argument
+    {
+      code: `Div().setStyles({ backgroundAttachment: "fixed", backgroundOrigin: "content-box" })`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "background-attachment: fixed", suggestion: '.bg("fixed")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "background-origin: content-box", suggestion: '.bg("origin-content")' } },
+      ],
+    },
+    {
+      code: `Div().setStyle("background-attachment:local;background-origin:border-box")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "background-attachment: local", suggestion: '.bg("local")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "background-origin: border-box", suggestion: '.bg("origin-border")' } },
+      ],
+    },
+    // backdrop-filter: lone blur() → backdropBlur keyword on the default scale, else [..];
+    // the -webkit- twin is covered by the same class
+    {
+      code: `Div().setStyle("backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "backdrop-filter: blur(8px)", suggestion: '.backdropBlur("sm")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "-webkit-backdrop-filter: blur(8px)", suggestion: '.backdropBlur("sm")' } },
+      ],
+    },
+    {
+      code: `Div().setStyles({ backdropFilter: "blur(6px)" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "backdrop-filter: blur(6px)", suggestion: '.backdropBlur("[6px]")' } }],
+    },
+    // filter: a single blur() or drop-shadow()
+    {
+      code: `Img().setStyle("filter:blur(16px)")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "filter: blur(16px)", suggestion: '.blur("lg")' } }],
+    },
+    {
+      code: `Img().setStyles({ filter: "blur(0.5rem)" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "filter: blur(0.5rem)", suggestion: '.blur("[0.5rem]")' } }],
+    },
+    {
+      code: `Img().setStyle("filter:drop-shadow(0 1px 2px #000)")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "filter: drop-shadow(0 1px 2px #000)", suggestion: '.dropShadow("[0_1px_2px_#000]")' } }],
+    },
+    // text-shadow: none, or the [..] arm
+    {
+      code: `H1().setStyle("text-shadow:0 1px 2px #000")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "text-shadow: 0 1px 2px #000", suggestion: '.textShadow("[0_1px_2px_#000]")' } }],
+    },
+    {
+      code: `H1().setStyles({ textShadow: "none" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "text-shadow: none", suggestion: '.textShadow("none")' } }],
+    },
+    // box-shadow: none, or the [..] arm (inset included)
+    {
+      code: `Div().setStyle("box-shadow:inset 0 1px 2px #000")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "box-shadow: inset 0 1px 2px #000", suggestion: '.shadow("[inset_0_1px_2px_#000]")' } }],
+    },
+    {
+      code: `Div().setStyles({ boxShadow: "none" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "box-shadow: none", suggestion: '.shadow("none")' } }],
+    },
+    // mix-blend-mode: keyword → .mixBlend()
+    {
+      code: `Img().setStyle("mix-blend-mode:multiply")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "mix-blend-mode: multiply", suggestion: '.mixBlend("multiply")' } }],
+    },
+    {
+      code: `Div().setStyles({ mixBlendMode: "plus-lighter" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "mix-blend-mode: plus-lighter", suggestion: '.mixBlend("plus-lighter")' } }],
+    },
+    // background-blend-mode: keyword → .bgBlend()
+    {
+      code: `Div().setStyles({ backgroundBlendMode: "luminosity" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-blend-mode: luminosity", suggestion: '.bgBlend("luminosity")' } }],
+    },
+    {
+      code: `Div().setStyle("background-image:url(/a.jpg);background-blend-mode:multiply")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-blend-mode: multiply", suggestion: '.bgBlend("multiply")' } }],
+    },
+    // text-indent: no typed method, so a static value goes to .cssProp()
+    {
+      code: `P().setStyle("text-indent:2em")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "text-indent: 2em", suggestion: '.cssProp("text-indent", "2em")' } }],
+    },
+    {
+      code: `P().setStyles({ textIndent: "1.5em hanging" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "text-indent: 1.5em hanging", suggestion: '.cssProp("text-indent", "1.5em hanging")' } }],
+    },
+    // vertical-align: same, no typed method
+    {
+      code: `Img().setStyle("vertical-align:middle")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "vertical-align: middle", suggestion: '.cssProp("vertical-align", "middle")' } }],
+    },
+    {
+      code: `Svg().setStyles({ verticalAlign: "-0.125em" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "vertical-align: -0.125em", suggestion: '.cssProp("vertical-align", "-0.125em")' } }],
+    },
+    // object-position: keywords in either order, or the [..] arm
+    {
+      code: `Img().setStyle("object-position:center top")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "object-position: center top", suggestion: '.object("top")' } }],
+    },
+    {
+      code: `Img().setStyles({ objectPosition: "left bottom" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "object-position: left bottom", suggestion: '.object("bottom-left")' } }],
+    },
+    {
+      code: `Img().setStyle("object-position:center")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "object-position: center", suggestion: '.object("center")' } }],
+    },
+    {
+      code: `Img().setStyle("object-position:50% 15%")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "object-position: 50% 15%", suggestion: '.object("[50%_15%]")' } }],
+    },
+    // keyword props pass the CSS value through when fluent's union has it
+    {
+      code: `Button().setStyle("cursor:pointer;overflow-x:hidden")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "cursor: pointer", suggestion: '.cursor("pointer")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "overflow-x: hidden", suggestion: '.overflow("x", "hidden")' } },
+      ],
+    },
+    {
+      code: `Div().setStyles({ overflow: "auto", whiteSpace: "pre-wrap" })`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "overflow: auto", suggestion: '.overflow("auto")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "white-space: pre-wrap", suggestion: '.whitespace("pre-wrap")' } },
+      ],
+    },
+    // font-weight: numbers → names, other numbers → [..]; opacity: → steps of 5, else [..]
+    {
+      code: `Span().setStyle("font-weight:600;opacity:0.5")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "font-weight: 600", suggestion: '.font("semibold")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "opacity: 0.5", suggestion: '.opacity("50")' } },
+      ],
+    },
+    {
+      code: `Span().setStyles({ fontWeight: 450, opacity: 0.33 })`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "font-weight: 450", suggestion: '.font("[450]")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "opacity: 0.33", suggestion: '.opacity("[0.33]")' } },
+      ],
+    },
+    {
+      code: `Span().setStyle("font-weight:bold;opacity:75%")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "font-weight: bold", suggestion: '.font("bold")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "opacity: 75%", suggestion: '.opacity("75")' } },
+      ],
+    },
+    {
+      code: `Span().setStyle("font-weight:bolder;opacity:0")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "font-weight: bolder", suggestion: ".font(…)" } },
+        { messageId: "useFluentEquivalent", data: { decl: "opacity: 0", suggestion: '.opacity("0")' } },
+      ],
+    },
+    // z-index: fluent's steps, else [..] (negatives too)
+    {
+      code: `Div().setStyle("z-index:20;position:relative")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "z-index: 20", suggestion: '.z("20")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "position: relative", suggestion: ".relative()" } },
+      ],
+    },
+    {
+      code: `Div().setStyle("z-index:-1")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "z-index: -1", suggestion: '.z("[-1]")' } }],
+    },
+    // outside fluent's union: the placeholder stays
+    {
+      code: `P().setStyle("text-align:start;overflow-y:overlay")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "text-align: start", suggestion: ".text(…)" } },
+        { messageId: "useFluentEquivalent", data: { decl: "overflow-y: overlay", suggestion: '.overflow("y", …)' } },
       ],
     },
     // multi-value shorthand
@@ -1421,14 +1689,14 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
       code: `Div().setStyles({ fontSize: "14px", textAlign: "center" })`,
       errors: [
         { messageId: "useFluentEquivalent", data: { decl: "font-size: 14px", suggestion: '.text("px", 14)' } },
-        { messageId: "useFluentEquivalent", data: { decl: "text-align: center", suggestion: ".text(…)" } },
+        { messageId: "useFluentEquivalent", data: { decl: "text-align: center", suggestion: '.text("center")' } },
       ],
     },
     {
       code: `Div().setStyles({ margin: "24px 0", zIndex: 999 })`,
       errors: [
         { messageId: "useFluentEquivalent", data: { decl: "margin: 24px 0", suggestion: ".m(…) per side" } },
-        { messageId: "useFluentEquivalent", data: { decl: "z-index: 999", suggestion: ".z(…)" } },
+        { messageId: "useFluentEquivalent", data: { decl: "z-index: 999", suggestion: '.z("[999]")' } },
       ],
     },
   ],
@@ -1497,6 +1765,12 @@ runSuite("no-tailwind-in-raw-class", noTailwindInRawClass, {
     {
       code: `Div().addClass("peer-invalid:text-red-600")`,
       output: `Div().variant("peer-invalid", { text: "red-600" })`,
+      errors: [{ messageId: "replaceWith" }],
+    },
+    // backdrop is a TailwindState head (fluent-html 8.2): a <dialog>'s ::backdrop
+    {
+      code: `Dialog().addClass("backdrop:bg-black/50")`,
+      output: `Dialog().variant("backdrop", { bg: "black/50" })`,
       errors: [{ messageId: "replaceWith" }],
     },
     // bare optional utility under a variant → boolean-true entry
@@ -1607,6 +1881,11 @@ runSuite("no-tailwind-in-cssclass", noTailwindInCssclass, {
     {
       code: `Div().cssClass("hover:bg-blue-600")`,
       output: `Div().hover({ bg: "blue-600" })`,
+      errors: [{ messageId: "tailwindInCssClass" }],
+    },
+    {
+      code: `Dialog().cssClass("backdrop:bg-black/50")`,
+      output: `Dialog().variant("backdrop", { bg: "black/50" })`,
       errors: [{ messageId: "tailwindInCssClass" }],
     },
   ],

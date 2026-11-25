@@ -52,8 +52,58 @@ const VALUE_PROPS: Record<string, string> = {
   opacity: "opacity",
   cursor: "cursor",
   overflow: "overflow",
-  "overflow-x": 'overflow("x-…")',
-  "overflow-y": 'overflow("y-…")',
+  "overflow-x": 'overflow("x", …)',
+  "overflow-y": 'overflow("y", …)',
+};
+
+// VALUE_PROPS whose CSS keyword is fluent's argument verbatim: a value in fluent's union gets the
+// exact call; anything else keeps the VALUE_PROPS placeholder.
+const CURSORS = new Set([
+  "auto", "default", "pointer", "wait", "text", "move", "help", "not-allowed", "none", "context-menu",
+  "progress", "cell", "crosshair", "vertical-text", "alias", "copy", "no-drop", "grab", "grabbing",
+  "all-scroll", "col-resize", "row-resize", "n-resize", "e-resize", "s-resize", "w-resize", "ne-resize",
+  "nw-resize", "se-resize", "sw-resize", "ew-resize", "ns-resize", "nesw-resize", "nwse-resize",
+  "zoom-in", "zoom-out",
+]);
+const OVERFLOW = new Set(["auto", "hidden", "clip", "visible", "scroll"]);
+// font-weight numbers → fluent's names (Tailwind's default scale); other numbers → [..].
+const FONT_WEIGHTS: Record<string, string> = {
+  "100": "thin", "200": "extralight", "300": "light", "400": "normal", "500": "medium",
+  "600": "semibold", "700": "bold", "800": "extrabold", "900": "black", normal: "normal", bold: "bold",
+};
+
+function fontWeightSuggestion(value: string): string | null {
+  const v = value.toLowerCase();
+  if (FONT_WEIGHTS[v]) return `.font("${FONT_WEIGHTS[v]}")`;
+  return /^\d{1,3}$/.test(v) ? `.font("[${v}]")` : null;
+}
+
+// opacity 0–1 or a percentage → fluent's steps of 5; anything off a step → [..].
+function opacitySuggestion(value: string): string | null {
+  const m = /^(\d*\.?\d+)(%?)$/.exec(value);
+  if (!m) return null;
+  const percent = m[2] ? Number(m[1]) : Number(m[1]) * 100;
+  if (percent > 100) return null;
+  const step = Math.round(percent * 1000) / 1000;
+  return Number.isInteger(step) && step % 5 === 0 ? `.opacity("${step}")` : `.opacity("[${value}]")`;
+}
+
+// z-index: fluent's 0–50 steps and auto, other integers (negatives too) → [..].
+const Z_STEPS = new Set(["0", "10", "20", "30", "40", "50", "auto"]);
+
+function zIndexSuggestion(value: string): string | null {
+  const v = value.toLowerCase();
+  if (Z_STEPS.has(v)) return `.z("${v}")`;
+  return /^-?\d+$/.test(v) ? `.z("[${v}]")` : null;
+}
+
+const KEYWORD_ARG_PROPS: Record<string, { method: string; values: ReadonlySet<string>; axis?: "x" | "y" }> = {
+  "white-space": { method: "whitespace", values: new Set(["normal", "nowrap", "pre", "pre-line", "pre-wrap", "break-spaces"]) },
+  "text-align": { method: "text", values: new Set(["left", "center", "right", "justify"]) },
+  cursor: { method: "cursor", values: CURSORS },
+  overflow: { method: "overflow", values: OVERFLOW },
+  "overflow-x": { method: "overflow", values: OVERFLOW, axis: "x" },
+  "overflow-y": { method: "overflow", values: OVERFLOW, axis: "y" },
 };
 
 // CSS property → fluent color method; flagged only for plain hex / white / black / transparent
@@ -65,7 +115,7 @@ const COLOR_PROPS: Record<string, string> = {
   "border-color": "border",
 };
 
-// display / position keyword values → dedicated fluent methods.
+// Keyword values → dedicated fluent methods or a fixed argument.
 const KEYWORD_PROPS: Record<string, Record<string, string>> = {
   display: {
     none: "hidden()",
@@ -85,6 +135,128 @@ const KEYWORD_PROPS: Record<string, Record<string, string>> = {
     sticky: "sticky()",
     static: "static()",
   },
+  "background-repeat": {
+    repeat: 'bg("repeat")',
+    "no-repeat": 'bg("no-repeat")',
+    "repeat-x": 'bg("repeat-x")',
+    "repeat-y": 'bg("repeat-y")',
+    round: 'bg("repeat-round")',
+    space: 'bg("repeat-space")',
+    "repeat no-repeat": 'bg("repeat-x")',
+    "no-repeat repeat": 'bg("repeat-y")',
+  },
+  "background-clip": {
+    "border-box": 'bg("clip-border")',
+    "padding-box": 'bg("clip-padding")',
+    "content-box": 'bg("clip-content")',
+    text: 'bg("clip-text")',
+  },
+  "background-attachment": {
+    fixed: 'bg("fixed")',
+    local: 'bg("local")',
+    scroll: 'bg("scroll")',
+  },
+  "background-origin": {
+    "border-box": 'bg("origin-border")',
+    "padding-box": 'bg("origin-padding")',
+    "content-box": 'bg("origin-content")',
+  },
+};
+
+// aspect-ratio → .aspect(): integer ratios take the ratio arm, other static numbers the [..] arm
+// (fluent-html's ratio arm is `${bigint}/${bigint}`, so "1.91/1" must be bracketed).
+const INT_RATIO_RE = /^(\d+)\s*\/\s*(\d+)$/;
+const NUMBER_RATIO_RE = /^\d+(?:\.\d+)?(?:\s*\/\s*\d+(?:\.\d+)?)?$/;
+
+function aspectSuggestion(value: string): string | null {
+  if (value.toLowerCase() === "auto") return '.aspect("auto")';
+  const ratio = INT_RATIO_RE.exec(value);
+  if (ratio) return `.aspect("${ratio[1]}/${ratio[2]}")`;
+  if (NUMBER_RATIO_RE.test(value)) return `.aspect("[${value.replace(/\s+/g, "")}]")`;
+  return null;
+}
+
+// A static CSS value inside a Tailwind [..] arm: spaces become underscores.
+const bracket = (value: string): string => value.trim().replace(/\s+/g, "_");
+
+const BG_SIZE_KEYWORDS = new Set(["auto", "cover", "contain"]);
+
+function bgSizeSuggestion(value: string): string {
+  const v = value.toLowerCase();
+  return BG_SIZE_KEYWORDS.has(v) ? `.bg("${v}")` : `.bg("[length:${bracket(value)}]")`;
+}
+
+const VERTICAL = new Set(["top", "bottom"]);
+const HORIZONTAL = new Set(["left", "right"]);
+
+// Position keywords in either order ("center top", "left top") → fluent's names ("top",
+// "top-left"), shared by object-position and background-position; null for anything else.
+function positionKeyword(value: string): string | null {
+  const words = value.toLowerCase().split(/\s+/);
+  const vertical = words.filter((w) => VERTICAL.has(w));
+  const horizontal = words.filter((w) => HORIZONTAL.has(w));
+  const keywordsOnly = words.length <= 2 && words.every((w) => w === "center" || VERTICAL.has(w) || HORIZONTAL.has(w));
+  if (!keywordsOnly || vertical.length > 1 || horizontal.length > 1) return null;
+  return [...vertical, ...horizontal].join("-") || "center";
+}
+
+function objectPositionSuggestion(value: string): string {
+  const keyword = positionKeyword(value);
+  return keyword ? `.object("${keyword}")` : `.object("[${bracket(value)}]")`;
+}
+
+function bgPositionSuggestion(value: string): string {
+  const keyword = positionKeyword(value);
+  return keyword ? `.bg("${keyword}")` : `.bg("[position:${bracket(value)}]")`;
+}
+
+// A single filter function is the one functional value with a fluent form: blur() → .blur() /
+// .backdropBlur() (the backdrop class also emits -webkit-backdrop-filter), drop-shadow() →
+// .dropShadow(). Chained functions stay inline: Tailwind composes filters in a fixed order.
+const FILTER_BLUR_METHOD: Record<string, string> = {
+  filter: "blur",
+  "backdrop-filter": "backdropBlur",
+  "-webkit-backdrop-filter": "backdropBlur",
+};
+const FILTER_FUNCTION_RE = /^([a-z-]+)\(([^()]*)\)$/i;
+const BLUR_LENGTH_RE = /^\d+(?:\.\d+)?(?:px|rem|em)$/i;
+const BLUR_SCALE: Record<string, string> = {
+  "4px": "xs", "8px": "sm", "12px": "md", "16px": "lg", "24px": "xl", "40px": "2xl", "64px": "3xl",
+};
+
+function filterSuggestion(prop: string, value: string): string | null {
+  const m = FILTER_FUNCTION_RE.exec(value);
+  if (!m) return null;
+  const fn = m[1].toLowerCase();
+  const arg = m[2].trim().toLowerCase();
+  if (fn === "blur" && BLUR_LENGTH_RE.test(arg)) {
+    return `.${FILTER_BLUR_METHOD[prop]}("${BLUR_SCALE[arg] ?? `[${arg}]`}")`;
+  }
+  // A static drop shadow; the named steps carry rgb() colors no hand-written value matches.
+  if (fn === "drop-shadow" && prop === "filter" && arg) return `.dropShadow("[${bracket(m[2])}]")`;
+  return null;
+}
+
+// The named shadow steps are layered rgb() shadows no hand-written value matches, so a static
+// shadow goes to the [..] arm.
+const SHADOW_METHOD: Record<string, string> = { "box-shadow": "shadow", "text-shadow": "textShadow" };
+
+function shadowSuggestion(method: string, value: string): string {
+  return value.toLowerCase() === "none" ? `.${method}("none")` : `.${method}("[${bracket(value)}]")`;
+}
+
+const CSS_PROP_ONLY = new Set(["text-indent", "vertical-align"]);
+
+const MIX_BLEND_MODES = new Set([
+  "normal", "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
+  "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity",
+  "plus-darker", "plus-lighter",
+]);
+// Tailwind has no bg-blend-plus-*, and fluent's TailwindBgBlendMode matches.
+const BG_BLEND_MODES = new Set([...MIX_BLEND_MODES].filter((m) => !m.startsWith("plus-")));
+const BLEND_PROPS: Record<string, { method: string; modes: Set<string> }> = {
+  "mix-blend-mode": { method: "mixBlend", modes: MIX_BLEND_MODES },
+  "background-blend-mode": { method: "bgBlend", modes: BG_BLEND_MODES },
 };
 
 type Decl = { prop: string; value: string };
@@ -105,6 +277,19 @@ function parseDeclarations(css: string): Decl[] {
 const camelToKebab = (s: string): string => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 
 function suggestionFor(prop: string, value: string): string | null {
+  if (prop === "aspect-ratio") return aspectSuggestion(value);
+  if (prop === "background-size") return bgSizeSuggestion(value);
+  if (prop === "background-position") return bgPositionSuggestion(value);
+  if (prop in SHADOW_METHOD) return shadowSuggestion(SHADOW_METHOD[prop], value);
+  // No typed method; a static value is still .cssProp()'s job, not an inline style.
+  if (CSS_PROP_ONLY.has(prop)) return `.cssProp("${prop}", "${value}")`;
+  const blend = BLEND_PROPS[prop];
+  if (blend) {
+    const mode = value.toLowerCase();
+    return blend.modes.has(mode) ? `.${blend.method}("${mode}")` : null;
+  }
+  if (prop === "object-position") return objectPositionSuggestion(value);
+
   const unitMethod = UNIT_PROPS[prop];
   if (unitMethod) {
     if (unitMethod.includes("(")) return `.${unitMethod}`;
@@ -113,6 +298,16 @@ function suggestionFor(prop: string, value: string): string | null {
     const m = UNIT_VALUE_RE.exec(value);
     if (m) return `.${unitMethod}("${m[2]}", ${m[1]})`;
     return `.${unitMethod}(…)`;
+  }
+
+  if (prop === "font-weight") return fontWeightSuggestion(value) ?? ".font(…)";
+  if (prop === "opacity") return opacitySuggestion(value) ?? ".opacity(…)";
+  if (prop === "z-index") return zIndexSuggestion(value) ?? ".z(…)";
+
+  const keywordArg = KEYWORD_ARG_PROPS[prop];
+  const keyword = value.toLowerCase();
+  if (keywordArg?.values.has(keyword)) {
+    return `.${keywordArg.method}(${keywordArg.axis ? `"${keywordArg.axis}", ` : ""}"${keyword}")`;
   }
 
   const valueMethod = VALUE_PROPS[prop];
@@ -163,9 +358,13 @@ const rule: Rule.RuleModule = {
     function checkDecl(node: any, prop: string, value: string) {
       if (ignored.has(prop)) return;
       // Dynamic (interpolated) or functional values (rgba, color-mix, clamp, var, url, gradients,
-      // calc) are the legitimate escape hatch — never flagged.
-      if (value.includes(EXPR) || prop.includes(EXPR) || value.includes("(")) return;
-      const suggestion = suggestionFor(prop, value);
+      // calc) are the legitimate escape hatch, except a single blur() or drop-shadow() filter.
+      if (value.includes(EXPR) || prop.includes(EXPR)) return;
+      const suggestion = prop in FILTER_BLUR_METHOD
+        ? filterSuggestion(prop, value)
+        : value.includes("(")
+          ? null
+          : suggestionFor(prop, value);
       if (!suggestion) return;
       context.report({
         node,

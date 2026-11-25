@@ -2,6 +2,27 @@
 
 All notable changes to `eslint-plugin-fluent-html` are documented here.
 
+## [Unreleased]
+
+### ✨ Added
+
+- **`no-fluent-equivalent-in-setstyle` flags static `aspect-ratio`**, now that fluent-html's `.aspect()` takes ratios: `setStyle("aspect-ratio:16/9")` suggests `.aspect("16/9")`, a decimal ratio or single number suggests the bracket arm (`.aspect("[1.91/1]")`), and `auto` suggests `.aspect("auto")`. Interpolated and other values stay inline.
+- **…and `text-indent` and `vertical-align`**: fluent-html has no typed method for either, so a static value suggests `.cssProp("text-indent", "2em")` / `.cssProp("vertical-align", "middle")`, which compile to `[text-indent:2em]` / `[vertical-align:middle]`. Interpolated and functional values (`calc()`) stay inline.
+- **…and `background-blend-mode`**: a keyword suggests `.bgBlend("multiply")` etc. `plus-darker` / `plus-lighter` (no `bg-blend-*` class) and multi-layer lists stay inline.
+- **…and `box-shadow` and `mix-blend-mode`**: `box-shadow: none` suggests `.shadow("none")` and a static shadow `.shadow("[inset_0_1px_2px_#000]")` (a shadow with an `rgb()`/`rgba()` color stays inline); a `mix-blend-mode` keyword suggests `.mixBlend("multiply")` etc.
+- **…and a lone `filter: blur()` or `filter: drop-shadow()`**: `blur(16px)` suggests `.blur("lg")` on the default scale and `.blur("[0.5rem]")` off it; a static `drop-shadow(0 1px 2px #000)` suggests `.dropShadow("[0_1px_2px_#000]")`. Chained filter functions and a drop shadow with an `rgba()` color stay inline.
+- **…and `text-shadow` and a lone `backdrop-filter: blur()`**, which fluent-html already expressed: `text-shadow: none` suggests `.textShadow("none")` and a static shadow `.textShadow("[0_1px_2px_#000]")` (a shadow with `rgba()` stays inline); `backdrop-filter: blur(8px)` suggests `.backdropBlur("sm")` on the default scale and `.backdropBlur("[6px]")` off it, and `-webkit-backdrop-filter` gets the same suggestion since the class emits both. Combined filters (`blur(8px) saturate(1.5)`) and `var()` stay inline.
+- **…and static `background-attachment` and `background-origin` keywords**: `fixed` / `local` / `scroll` suggest `.bg("fixed")` etc.; `border-box` / `padding-box` / `content-box` suggest `.bg("origin-border")` etc. Multi-layer lists (`fixed, scroll`) stay inline.
+- **…and static `background-repeat` and `background-clip` keywords**: `no-repeat` suggests `.bg("no-repeat")`, `round` `.bg("repeat-round")`, `repeat no-repeat` `.bg("repeat-x")`; `text` suggests `.bg("clip-text")`, `padding-box` `.bg("clip-padding")`. Values with no single fluent keyword and the prefixed `-webkit-background-clip` stay inline.
+- **…and static `background-size`, `background-position` and `object-position`**, now that `.bg()` and `.object()` take them: `background-size: cover` suggests `.bg("cover")` and a length `.bg("[length:50%_auto]")`; `background-position` keywords map like `object-position`'s (`right top` → `.bg("top-right")`), other values to `.bg("[position:right_0.875rem_center]")`; `object-position` keywords in either order map to fluent's names (`center top` → `.object("top")`, `left bottom` → `.object("bottom-left")`), other values to `.object("[50%_15%]")`.
+
+### 🐛 Fixed
+
+- **`no-fluent-equivalent-in-setstyle` names the exact call for keyword properties**: `white-space`, `text-align`, `cursor` and `overflow` (`-x`/`-y`) suggest `.whitespace("nowrap")`, `.text("center")`, `.cursor("pointer")`, `.overflow("x", "hidden")` instead of a `(…)` placeholder when fluent's union has the value. The `overflow-x`/`-y` hint also said `.overflow("x-…")`, which doesn't type-check; it's now `.overflow("x", …)`. Values outside the union keep the placeholder.
+- **…and for `font-weight` and `opacity`**, which need converting: `600` suggests `.font("semibold")` (100–900 map to Tailwind's names, `normal`/`bold` stay), another number `.font("[450]")`; `opacity: 0.5` or `50%` suggests `.opacity("50")`, a value off the steps of 5 `.opacity("[0.33]")`. `bolder`/`lighter` keep the placeholder.
+- **…and for `z-index`**: fluent's steps (`0`–`50` by 10, `auto`) suggest `.z("20")`, any other integer `.z("[999]")` / `.z("[-1]")`.
+- **`backdrop` is a known variant head**, matching fluent-html's `TailwindState`. `no-tailwind-in-raw-class` now reports `.addClass("backdrop:bg-black/50")` / `.setClass(…)` (it skipped them), and both it and `no-tailwind-in-cssclass` autofix to `.variant("backdrop", { bg: "black/50" })`.
+
 ## [4.1.0] - 2026-08-14 - Control flow & exhaustiveness: the two leaking correction classes + the first type-aware rule
 
 The lint arm of the agent-fitness batch (prose-to-compiler candidates 4 and 12): the two correction classes that survived every earlier tool tier become lint findings, and the shipped-P1 Match-default gap gets the plugin's first type-aware rule.

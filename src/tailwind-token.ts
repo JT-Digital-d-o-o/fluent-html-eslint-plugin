@@ -36,7 +36,7 @@ const STATE_HEADS = new Set([
   "hover", "focus", "focus-within", "focus-visible", "active", "visited",
   "disabled", "enabled", "checked", "indeterminate", "required", "invalid", "valid",
   "first", "last", "odd", "even", "empty", "first-of-type", "last-of-type",
-  "placeholder", "selection", "marker", "file", "before", "after", "dark",
+  "placeholder", "selection", "marker", "file", "backdrop", "before", "after", "dark",
   "print", "motion-reduce", "motion-safe", "portrait", "landscape",
   "starting", "open", "inert", "only", "only-of-type", "target", "default",
   "optional", "read-only", "autofill", "in-range", "out-of-range",
