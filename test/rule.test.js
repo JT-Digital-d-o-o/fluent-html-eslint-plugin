@@ -1363,6 +1363,9 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     { code: `Div().setStyle("backdrop-filter:drop-shadow(0 1px 2px #000)")` },
     // text-shadow with a functional color stays inline, like other colors
     { code: `H1().setStyle("text-shadow:0 1px 2px rgba(0,0,0,0.4)")` },
+    { code: `Div().setStyle("box-shadow:0 4px 12px rgb(0 0 0 / 0.1)")` },
+    // mix-blend-mode values outside the fluent union stay inline
+    { code: `Div().setStyle("mix-blend-mode:inherit")` },
     // aspect-ratio values .aspect() can't express stay inline
     { code: `Div().setStyle("aspect-ratio:inherit")` },
     { code: "Div().setStyle(`aspect-ratio:${w}/${h}`)" },
@@ -1542,6 +1545,24 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     {
       code: `H1().setStyles({ textShadow: "none" })`,
       errors: [{ messageId: "useFluentEquivalent", data: { decl: "text-shadow: none", suggestion: '.textShadow("none")' } }],
+    },
+    // box-shadow: none, or the [..] arm (inset included)
+    {
+      code: `Div().setStyle("box-shadow:inset 0 1px 2px #000")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "box-shadow: inset 0 1px 2px #000", suggestion: '.shadow("[inset_0_1px_2px_#000]")' } }],
+    },
+    {
+      code: `Div().setStyles({ boxShadow: "none" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "box-shadow: none", suggestion: '.shadow("none")' } }],
+    },
+    // mix-blend-mode: keyword → .mixBlend()
+    {
+      code: `Img().setStyle("mix-blend-mode:multiply")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "mix-blend-mode: multiply", suggestion: '.mixBlend("multiply")' } }],
+    },
+    {
+      code: `Div().setStyles({ mixBlendMode: "plus-lighter" })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "mix-blend-mode: plus-lighter", suggestion: '.mixBlend("plus-lighter")' } }],
     },
     // object-position: keywords in either order, or the [..] arm
     {

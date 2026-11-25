@@ -187,11 +187,19 @@ function filterSuggestion(prop: string, value: string): string | null {
   return null;
 }
 
-// The named text-shadow steps are layered shadows no hand-written value matches, so a static
+// The named shadow steps are layered rgb() shadows no hand-written value matches, so a static
 // shadow goes to the [..] arm.
-function textShadowSuggestion(value: string): string {
-  return value.toLowerCase() === "none" ? '.textShadow("none")' : `.textShadow("[${bracket(value)}]")`;
+const SHADOW_METHOD: Record<string, string> = { "box-shadow": "shadow", "text-shadow": "textShadow" };
+
+function shadowSuggestion(method: string, value: string): string {
+  return value.toLowerCase() === "none" ? `.${method}("none")` : `.${method}("[${bracket(value)}]")`;
 }
+
+const MIX_BLEND_MODES = new Set([
+  "normal", "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
+  "hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity",
+  "plus-darker", "plus-lighter",
+]);
 
 type Decl = { prop: string; value: string };
 
@@ -214,7 +222,11 @@ function suggestionFor(prop: string, value: string): string | null {
   if (prop === "aspect-ratio") return aspectSuggestion(value);
   if (prop === "background-size") return bgSizeSuggestion(value);
   if (prop === "background-position") return bgPositionSuggestion(value);
-  if (prop === "text-shadow") return textShadowSuggestion(value);
+  if (prop in SHADOW_METHOD) return shadowSuggestion(SHADOW_METHOD[prop], value);
+  if (prop === "mix-blend-mode") {
+    const mode = value.toLowerCase();
+    return MIX_BLEND_MODES.has(mode) ? `.mixBlend("${mode}")` : null;
+  }
   if (prop === "object-position") return objectPositionSuggestion(value);
 
   const unitMethod = UNIT_PROPS[prop];
