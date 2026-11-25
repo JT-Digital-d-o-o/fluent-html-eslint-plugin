@@ -4,6 +4,10 @@ All notable changes to `eslint-plugin-fluent-html` are documented here.
 
 ## [Unreleased]
 
+### ✨ Added
+
+- **`no-fluent-equivalent-in-setstyle` flags static `aspect-ratio`**, now that fluent-html's `.aspect()` takes ratios: `setStyle("aspect-ratio:16/9")` suggests `.aspect("16/9")`, a decimal ratio or single number suggests the bracket arm (`.aspect("[1.91/1]")`), and `auto` suggests `.aspect("auto")`. Interpolated and other values stay inline.
+
 ### 🐛 Fixed
 
 - **`backdrop` is a known variant head**, matching fluent-html's `TailwindState`. `no-tailwind-in-raw-class` now reports `.addClass("backdrop:bg-black/50")` / `.setClass(…)` (it skipped them), and both it and `no-tailwind-in-cssclass` autofix to `.variant("backdrop", { bg: "black/50" })`.

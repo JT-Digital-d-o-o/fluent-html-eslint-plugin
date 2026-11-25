@@ -1354,8 +1354,10 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     { code: `Div().setStyle("border-top:1px solid var(--color-border)")` },
     { code: `Div().setStyles({ backgroundImage: "url('/img.png')", backgroundSize: "cover" })` },
     // properties with no fluent equivalent
-    { code: `Div().setStyle("aspect-ratio:16/9")` },
     { code: `Div().setStyle("backdrop-filter:blur(4px)")` },
+    // aspect-ratio values .aspect() can't express stay inline
+    { code: `Div().setStyle("aspect-ratio:inherit")` },
+    { code: "Div().setStyle(`aspect-ratio:${w}/${h}`)" },
     // mixed: static part of a template decl touching an expression is skipped
     { code: "Div().setStyle(`margin: ${x}px 0`)" },
     // non-literal arg — skipped
@@ -1410,6 +1412,30 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
         { messageId: "useFluentEquivalent", data: { decl: "display: flex", suggestion: ".flex()" } },
         { messageId: "useFluentEquivalent", data: { decl: "position: absolute", suggestion: ".absolute()" } },
       ],
+    },
+    // aspect-ratio: integer ratio arm, [..] for decimals, keyword for auto
+    {
+      code: `Div().setStyle("aspect-ratio:16/9;background:#000")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "aspect-ratio: 16/9", suggestion: '.aspect("16/9")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "background: #000", suggestion: ".bg(…) with a theme token" } },
+      ],
+    },
+    {
+      code: `Img().setStyle("aspect-ratio: 4 / 5")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "aspect-ratio: 4 / 5", suggestion: '.aspect("4/5")' } }],
+    },
+    {
+      code: `Img().setStyle("aspect-ratio:1.91 / 1")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "aspect-ratio: 1.91 / 1", suggestion: '.aspect("[1.91/1]")' } }],
+    },
+    {
+      code: `Div().setStyles({ aspectRatio: 1.5 })`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "aspect-ratio: 1.5", suggestion: '.aspect("[1.5]")' } }],
+    },
+    {
+      code: `Div().setStyle("aspect-ratio:auto")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "aspect-ratio: auto", suggestion: '.aspect("auto")' } }],
     },
     // multi-value shorthand
     {

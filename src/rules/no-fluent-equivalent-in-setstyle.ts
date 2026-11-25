@@ -87,6 +87,19 @@ const KEYWORD_PROPS: Record<string, Record<string, string>> = {
   },
 };
 
+// aspect-ratio → .aspect(): integer ratios take the ratio arm, other static numbers the [..] arm
+// (fluent-html's ratio arm is `${bigint}/${bigint}`, so "1.91/1" must be bracketed).
+const INT_RATIO_RE = /^(\d+)\s*\/\s*(\d+)$/;
+const NUMBER_RATIO_RE = /^\d+(?:\.\d+)?(?:\s*\/\s*\d+(?:\.\d+)?)?$/;
+
+function aspectSuggestion(value: string): string | null {
+  if (value.toLowerCase() === "auto") return '.aspect("auto")';
+  const ratio = INT_RATIO_RE.exec(value);
+  if (ratio) return `.aspect("${ratio[1]}/${ratio[2]}")`;
+  if (NUMBER_RATIO_RE.test(value)) return `.aspect("[${value.replace(/\s+/g, "")}]")`;
+  return null;
+}
+
 type Decl = { prop: string; value: string };
 
 function parseDeclarations(css: string): Decl[] {
@@ -105,6 +118,8 @@ function parseDeclarations(css: string): Decl[] {
 const camelToKebab = (s: string): string => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 
 function suggestionFor(prop: string, value: string): string | null {
+  if (prop === "aspect-ratio") return aspectSuggestion(value);
+
   const unitMethod = UNIT_PROPS[prop];
   if (unitMethod) {
     if (unitMethod.includes("(")) return `.${unitMethod}`;
