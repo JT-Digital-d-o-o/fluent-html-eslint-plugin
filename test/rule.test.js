@@ -1659,6 +1659,18 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
         { messageId: "useFluentEquivalent", data: { decl: "opacity: 0", suggestion: '.opacity("0")' } },
       ],
     },
+    // z-index: fluent's steps, else [..] (negatives too)
+    {
+      code: `Div().setStyle("z-index:20;position:relative")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "z-index: 20", suggestion: '.z("20")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "position: relative", suggestion: ".relative()" } },
+      ],
+    },
+    {
+      code: `Div().setStyle("z-index:-1")`,
+      errors: [{ messageId: "useFluentEquivalent", data: { decl: "z-index: -1", suggestion: '.z("[-1]")' } }],
+    },
     // outside fluent's union: the placeholder stays
     {
       code: `P().setStyle("text-align:start;overflow-y:overlay")`,
@@ -1684,7 +1696,7 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
       code: `Div().setStyles({ margin: "24px 0", zIndex: 999 })`,
       errors: [
         { messageId: "useFluentEquivalent", data: { decl: "margin: 24px 0", suggestion: ".m(…) per side" } },
-        { messageId: "useFluentEquivalent", data: { decl: "z-index: 999", suggestion: ".z(…)" } },
+        { messageId: "useFluentEquivalent", data: { decl: "z-index: 999", suggestion: '.z("[999]")' } },
       ],
     },
   ],

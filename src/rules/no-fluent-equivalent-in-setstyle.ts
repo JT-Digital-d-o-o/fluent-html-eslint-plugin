@@ -88,6 +88,15 @@ function opacitySuggestion(value: string): string | null {
   return Number.isInteger(step) && step % 5 === 0 ? `.opacity("${step}")` : `.opacity("[${value}]")`;
 }
 
+// z-index: fluent's 0–50 steps and auto, other integers (negatives too) → [..].
+const Z_STEPS = new Set(["0", "10", "20", "30", "40", "50", "auto"]);
+
+function zIndexSuggestion(value: string): string | null {
+  const v = value.toLowerCase();
+  if (Z_STEPS.has(v)) return `.z("${v}")`;
+  return /^-?\d+$/.test(v) ? `.z("[${v}]")` : null;
+}
+
 const KEYWORD_ARG_PROPS: Record<string, { method: string; values: ReadonlySet<string>; axis?: "x" | "y" }> = {
   "white-space": { method: "whitespace", values: new Set(["normal", "nowrap", "pre", "pre-line", "pre-wrap", "break-spaces"]) },
   "text-align": { method: "text", values: new Set(["left", "center", "right", "justify"]) },
@@ -293,6 +302,7 @@ function suggestionFor(prop: string, value: string): string | null {
 
   if (prop === "font-weight") return fontWeightSuggestion(value) ?? ".font(…)";
   if (prop === "opacity") return opacitySuggestion(value) ?? ".opacity(…)";
+  if (prop === "z-index") return zIndexSuggestion(value) ?? ".z(…)";
 
   const keywordArg = KEYWORD_ARG_PROPS[prop];
   const keyword = value.toLowerCase();
