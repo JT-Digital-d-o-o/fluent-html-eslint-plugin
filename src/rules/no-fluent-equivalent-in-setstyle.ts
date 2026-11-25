@@ -101,6 +101,16 @@ const KEYWORD_PROPS: Record<string, Record<string, string>> = {
     "content-box": 'bg("clip-content")',
     text: 'bg("clip-text")',
   },
+  "background-attachment": {
+    fixed: 'bg("fixed")',
+    local: 'bg("local")',
+    scroll: 'bg("scroll")',
+  },
+  "background-origin": {
+    "border-box": 'bg("origin-border")',
+    "padding-box": 'bg("origin-padding")',
+    "content-box": 'bg("origin-content")',
+  },
 };
 
 // aspect-ratio → .aspect(): integer ratios take the ratio arm, other static numbers the [..] arm

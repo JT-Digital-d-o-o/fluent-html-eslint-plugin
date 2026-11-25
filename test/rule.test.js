@@ -1364,6 +1364,7 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     // background-repeat / -clip values with no single fluent keyword, and the prefixed clip
     { code: `Div().setStyle("background-repeat:round space")` },
     { code: `Div().setStyle("-webkit-background-clip:text")` },
+    { code: `Div().setStyle("background-attachment:fixed, scroll")` },
     // mixed: static part of a template decl touching an expression is skipped
     { code: "Div().setStyle(`margin: ${x}px 0`)" },
     // non-literal arg — skipped
@@ -1483,6 +1484,21 @@ runSuite("no-fluent-equivalent-in-setstyle", noFluentEquivalentInSetstyle, {
     {
       code: `Div().setStyle("background-repeat:repeat no-repeat")`,
       errors: [{ messageId: "useFluentEquivalent", data: { decl: "background-repeat: repeat no-repeat", suggestion: '.bg("repeat-x")' } }],
+    },
+    // background-attachment and background-origin: keyword → fixed .bg() argument
+    {
+      code: `Div().setStyles({ backgroundAttachment: "fixed", backgroundOrigin: "content-box" })`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "background-attachment: fixed", suggestion: '.bg("fixed")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "background-origin: content-box", suggestion: '.bg("origin-content")' } },
+      ],
+    },
+    {
+      code: `Div().setStyle("background-attachment:local;background-origin:border-box")`,
+      errors: [
+        { messageId: "useFluentEquivalent", data: { decl: "background-attachment: local", suggestion: '.bg("local")' } },
+        { messageId: "useFluentEquivalent", data: { decl: "background-origin: border-box", suggestion: '.bg("origin-border")' } },
+      ],
     },
     // object-position: keywords in either order, or the [..] arm
     {
